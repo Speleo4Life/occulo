@@ -5,23 +5,23 @@
 % Define file names for analysis
 cd '/Users/ray.macneil/Nextcloud/ubc_vision/occulo_imagery/data/Real_Participant_Data/EDFS'
 ext = '.edf'
-file_names = ls;
-file_names = transpose(sort(string(regexp(file_names, ['\w*' ext],...
+fileIDs = ls;
+fileIDs = transpose(sort(string(regexp(fileIDs, ['\w*' ext],...
     'match'))));
-subj_count = numel(unique(extractBefore(file_names, '_')));
+subj_count = numel(unique(extractBefore(fileIDs, '_')));
 
 
 %Import files batchwise
-for ii = 1:length(file_names)
+for ii = 1:length(fileIDs)
    
    try
-       subj = extractBefore(file_names(ii), '_');
-       cond = extractBetween(file_names(ii), '_', ext);
-       edfm = Edf2Mat(char(file_names(ii)));
+       subj = extractBefore(fileIDs(ii), '_');
+       cond = extractBetween(fileIDs(ii), '_', ext);
+       edfm = Edf2Mat(char(fileIDs(ii)));
        edfall.(subj).(cond) = edfm;
        edfevt.(subj).(cond) = edfm.RawEdf.FEVENT;
    catch
-       warning('There was a problem with file: %s', file_names(ii));
+       warning('There was a problem with file: %s', fileIDs(ii));
    end
 
 end
@@ -34,7 +34,7 @@ T = table('Size', [subj_count 4], 'VariableTypes',...
 T.Properties.Description = 'Closed-Eyes EyeLink Data | MacNeil | Vision Lab | 2020'
 ssize = numel(fieldnames(edfevt));
 field_names = char(fieldnames(edfevt));
-pids = unique(extractBefore(file_names, '_'))
+pids = unique(extractBefore(fileIDs, '_'))
 T.pid = categorical(pids);
 
 % Extract calibration information
@@ -52,8 +52,8 @@ end
 
 
 % Initialize variable names and types for our table that will subset trial events  
-new_var_names = varmaker(["C1", "C2", "C3"],["A", "B", "C", "D"], 'false', [],...
-    ["ST", "EN"], "IDX");
+new_var_names = varmaker(["C1", "C2", "C3"],["A", "B", "C", "D"], 'false',...
+    'false', [], ["ST", "EN"], 'true', "IDX");
 vartypes = cellstr(repmat("cell",1,numel(new_var_names))); 
 evt_indices = table('Size', [subj_count numel(new_var_names)],... 
     'VariableTypes', vartypes, 'VariableNames', new_var_names); 
@@ -518,7 +518,7 @@ newvars = cell2table(newvars)
 newvars.Properties.VariableNames=vnames2
 
 T4 = [T newvars];
-T2.pid = unique(extractBefore(file_names, '_'));
+T2.pid = unique(extractBefore(fileIDs, '_'));
 
 
 ad_acrry_c1 = nanmean([T4.a_acrcy_c1, T4.d_acrcy_c1], 'all')
