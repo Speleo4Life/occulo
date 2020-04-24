@@ -1,4 +1,4 @@
-function features_struct = get_features(event_struct, data, calibration_factor, label)
+function features_struct = get_features(event_struct, data, calibration_factor, label, remove_outliers)
 
 event = event_struct;
 data_struct = data;
@@ -33,11 +33,19 @@ for ind = 1:length(event.time_series)
 end
 
 % Values and errors of each saccade
+% all_ prefix indicates the struct containing values with outliers marked
+% NaN, while without the prefix the outliers are completely removed for
+% calculations
 exp_values = struct('A', [], 'B', [], 'C', [], 'D', []);
+all_exp_values = struct('A', [], 'B', [], 'C', [], 'D', []);
 exp_errors = struct('A', [], 'B', [], 'C', [], 'D', []);
+all_exp_errors = struct('A', [], 'B', [], 'C', [], 'D', []);
 accuracy_values = struct('A', [], 'B', [], 'C', [], 'D', []);
+all_accuracy_values = struct('A', [], 'B', [], 'C', [], 'D', []);
 peak_vel_values = struct('A', [], 'B', [], 'C', [], 'D', []);
+all_peak_vel_values = struct('A', [], 'B', [], 'C', [], 'D', []);
 latencies = struct('A', [], 'B', [], 'C', [], 'D', []);
+all_latencies = struct('A', [], 'B', [], 'C', [], 'D', []);
 
 % Extract angles from data
 data_x = data_struct.time_series(1, :);
@@ -62,15 +70,12 @@ for i = 1:length(points)
       
         % Loop through data, extract saccade
         for ind = 1:length(data_struct.time_stamps)
-            
             if data_struct.time_stamps(ind) > stop
                 break
             end
-            
             if data_struct.time_stamps(ind) >= start
                saccade = [saccade angle_data(ind)]; % Append to array
             end
-            
         end
         
         % Isolate saccade using changepoints
@@ -121,34 +126,69 @@ for i = 1:length(points)
         % Find peak velocity (magnitude)
         peak_vel_values.(point) = [peak_vel_values.(point) max(abs(gradient(saccade, time_step)))];
         % Find latency - NaN for undeterminable latency
-        latencies.(point) = [latencies.(point) NaN];
+        all_latencies.(point) = [all_latencies.(point) NaN];
         if get_latency
-            latencies.(point)(end) = cutoffs(1)*time_step;
+            all_latencies.(point)(end) = cutoffs(1)*time_step;
+            latencies.(point) = [latencies.(point) cutoffs(1)*time_step];
         end
     end
 end
 
 % Remove outliers - 1.5*IQR from mean
-% for i = 1:length(points)
-%     point = points{i};
-%     
-%     acc_avg = mean(exp_values.(point));
-%     acc_iqr = iqr(exp_values.(point));
-%     vel_avg = mean(peak_vel_values.(point));
-%     vel_iqr = iqr(peak_vel_values.(point));
-%     latency_avg = mean(latencies.(point));
-%     latency_iqr = iqr(latencies.(point));
-%     
-%     acc_filter = abs(exp_values.(point)-acc_avg) < 1.5*acc_iqr;
-%     vel_filter = abs(peak_vel_values.(point)-vel_avg) < 1.5*vel_iqr;
-%     lat_filter = abs(latencies.(point)-latency_avg) < 1.5*latency_iqr;
-%     
-%     % Apply filters
-%     exp_values.(point) = exp_values.(point)(acc_filter);
-%     exp_errors.(point) = exp_errors.(point)(acc_filter);
-%     peak_vel_values.(point)= peak_vel_values.(point)(vel_filter);
-%     latencies.(point) = latencies.(point)(lat_filter);
-% end
+for i = 1:length(points)
+    point = points{i};
+    
+    acc_avg = mean(exp_values.(point));
+    acc_iqr = iqr(exp_values.(point));
+    vel_avg = mean(peak_vel_values.(point));
+    vel_iqr = iqr(peak_vel_values.(point));
+    latency_avg = mean(latencies.(point));
+    latency_iqr = iqr(latencies.(point));
+    
+    % Increase iqr range until 80% data is kept
+    acc_filter = abs(exp_values.(point)-acc_avg) < 1.5*acc_iqr;
+    iqr_scale = 1.5;
+    while nnz(acc_filter)/numel(acc_filter) < 0.8
+        iqr_scale = iqr_scale + 0.1;
+        acc_filter = abs(exp_values.(point)-acc_avg) < iqr_scale*acc_iqr;
+    end
+    
+    vel_filter = abs(peak_vel_values.(point)-vel_avg) < 1.5*vel_iqr;
+    iqr_scale = 1.5;
+    while nnz(vel_filter)/numel(vel_filter) < 0.8
+        iqr_scale = iqr_scale + 0.1;
+        vel_filter = abs(peak_vel_values.(point)-vel_avg) < iqr_scale*vel_iqr;
+    end
+    
+    lat_filter = abs(all_latencies.(point)-latency_avg) < 1.5*latency_iqr;
+    iqr_scale = 1.5;
+    while nnz(lat_filter)/numel(lat_filter) < 0.8
+        % Deal with existing NaN values
+        if iqr_scale > 10
+            break;
+        end
+        iqr_scale = iqr_scale + 0.1;
+        lat_filter = abs(all_latencies.(point)-latency_avg) < iqr_scale*latency_iqr;
+    end
+    
+    % Replace outlier values with NaN
+    all_exp_values.(point) = exp_values.(point);
+    all_exp_errors.(point) = exp_errors.(point);
+    all_peak_vel_values.(point) = peak_vel_values.(point);
+    
+    if remove_outliers
+        all_exp_values.(point)(~acc_filter) = NaN;
+        all_exp_errors.(point)(~acc_filter) = NaN;
+        all_peak_vel_values.(point)(~vel_filter) = NaN;
+        all_latencies.(point)(~lat_filter) = NaN;
+
+        % Apply filters
+        exp_values.(point) = exp_values.(point)(acc_filter);
+        exp_errors.(point) = exp_errors.(point)(acc_filter);
+        peak_vel_values.(point)= peak_vel_values.(point)(vel_filter);
+        latencies.(point) = all_latencies.(point)(~isnan(all_latencies.(point)));
+    end
+end
 
 % Average accuracy (mean deviation and std)
 %[A B C D Total]
@@ -166,6 +206,7 @@ calibration_angles = [-22 -11 11 22];
 for i = 1:length(points) 
     point = points{i};
     accuracy_values.(point) = abs((exp_values.(point) - calibration_angles(i)));
+    all_accuracy_values.(point) = abs((all_exp_values.(point) - calibration_angles(i)));
     point_latency = latencies.(point)(~isnan(latencies.(point)));
     
     values = [values mean(exp_values.(point))];
@@ -188,21 +229,21 @@ latency_error = [latency_error norm(latency_error)/length(points)];
 
 % Plots
 
-% Accuracy of each point
-for i = 1:length(points)
-    point = points{i};
-    
-    figure()
-    errorbar(1:length(exp_values.(point)),exp_values.(point), exp_errors.(point), ...
-   's','MarkerSize',5,'MarkerEdgeColor','black','MarkerFaceColor','black');
-    xlim([0 length(exp_values.(point))+1])
-    hold on 
-    yline(calibration_angles(i)); % Reference
-    title([label ': Accuracy - point ' num2str(point)]);
-    xlabel('Trial number'); 
-    ylabel('Angle'); 
-    legend('Experimentation data','Calibration value');
-end
+% % Accuracy of each point
+% for i = 1:length(points)
+%     point = points{i};
+%     
+%     figure()
+%     errorbar(1:length(exp_values.(point)),exp_values.(point), exp_errors.(point), ...
+%    's','MarkerSize',5,'MarkerEdgeColor','black','MarkerFaceColor','black');
+%     xlim([0 length(exp_values.(point))+1])
+%     hold on 
+%     yline(calibration_angles(i)); % Reference
+%     title([label ': Accuracy - point ' num2str(point)]);
+%     xlabel('Trial number'); 
+%     ylabel('Angle'); 
+%     legend('Experimentation data','Calibration value');
+% end
 
 % Accuracy of all points
 % figure()
@@ -251,9 +292,9 @@ end
 % hold off
 
 features_struct = struct( ...
-    "all_values", exp_values, "values", values, "values_error", values_error, ...
-    "all_accuracy", accuracy_values, "accuracy", accuracy, ...
-    "accuracy_error",accuracy_error,  "max_accuracy", max(accuracy),...
-    "all_peak_vel", peak_vel_values, "peak_vel", peak_vel, "peak_vel_error", peak_vel_error, ...
-    "all_latency", latencies, "latency", latency, "latency_error", latency_error);
+    "all_values", all_exp_values, "values", values, "values_error", values_error, ...
+    "all_accuracy", all_accuracy_values, "accuracy", accuracy, ...
+    "accuracy_error", accuracy_error,  "max_accuracy", max(accuracy),...
+    "all_peak_vel", all_peak_vel_values, "peak_vel", peak_vel, "peak_vel_error", peak_vel_error, ...
+    "all_latency", all_latencies, "latency", latency, "latency_error", latency_error);
 end
