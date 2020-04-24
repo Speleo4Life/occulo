@@ -1,9 +1,11 @@
 % function VarNamesOut = VarMaker(condLabel, triaLabel, loopTrial,
-% numTrialRep, lab3, lab4)
+% numTrialRep, lab3, sortcorL3, lab4)
 % condLabel <STR> A string array containing the condition/group labels
 % triaLabel <STR> A string array containing the trial labels
+% sortcorLT <CHR> A character vector, 'true' OR 'false', to indicate if
+%                   sort correction will be need for the trial label.
 % loopTrial <CHR> A character vector, 'true' OR 'false', to indicate if
-% there will be repeated trials/measures
+%                   there will numeric repetitions
 % numTrialRep <POS INTEGER> Number of trial type variations
 % lab3 <STR> A string array representing another component of the trials
 % srtcorL3 <CHR> A character vector, 'true' OR 'false', to indicate if
@@ -22,37 +24,43 @@
 % Ray R. MacNeil                              
 % UBC, Department of Psychology, Vision Lab   
 % Email: raymond.macneil@mail.utoronto.ca 
-function VarNamesOut = varmaker(condLabel, triaLabel, loopTrial, numTrialRep, lab3, srtcorL3, lab4)
+function VarNamesOut = varmaker(condLabel, triaLabel, sortcorLT, loopTrial, numTrialRep, lab3, sortcorL3, lab4)
 
 
 %% Exception Handling and Input Error
 
-if  nargin < 4 || ~exist('numTrialRep', 'var') || isempty(numTrialRep)...
+if  nargin < 4 || ~exist('sortcorLT','var') || isempty(sortcorL3) || ~ischar(sortcorL3)
+    sortcorLT = 'false';    
+end
+
+if  nargin < 5 || ~exist('numTrialRep', 'var') || isempty(numTrialRep)...
         || ~isnumeric(numTrialRep) || numTrialRep ~= round(numTrialRep)...
         || ~isscalar(numTrialRep)
     numTrialRep = 0;
 end
 
-if  nargin < 5 || ~exist('lab3', 'var') || isempty(lab3) || ~isstring(lab3)
+if  nargin < 6 || ~exist('lab3', 'var') || isempty(lab3) || ~isstring(lab3)
     lab3 = 1;
 end
 
-if  nargin < 6 || ~exist('srtcorL3','var') || isempty(srtcorL3) || ~ischar(srtcorL3)
-    srtcorL3 = 'false';    
+if  nargin < 7 || ~exist('sortcorL3','var') || isempty(sortcorL3) || ~ischar(sortcorL3)
+    sortcorL3 = 'false';    
 end
     
-if  nargin < 7 || ~exist('lab4', 'var') || isempty(lab4) || ~isstring(lab4)
+if  nargin < 8 || ~exist('lab4', 'var') || isempty(lab4) || ~isstring(lab4)
     lab4 = NaN;
 end
     
 %% Main Activity
+
+numTLs = numel(triaLabel);
 
 if ~isempty(loopTrial) && strcmp(loopTrial, 'true')
     
     rows2iter = numTrialRep * numel(triaLabel);  
     VarNamesOut = strings(rows2iter, numel(condLabel)); 
     
-    for jj = 1:numel(triaLabel)
+    for jj = 1:numTLs
 
         for kk = 1:numTrialRep
             repnum = num2str(kk);
@@ -63,20 +71,20 @@ if ~isempty(loopTrial) && strcmp(loopTrial, 'true')
     end
 
 else
-    rows2iter = numel(triaLabel);
+    rows2iter = numTLs;
     VarNamesOut = strings(rows2iter, numel(condLabel)); 
 
-    for jj = 1:numel(triaLabel)
+    for jj = 1:numTLs
             VarNamesOut(jj,:) = condLabel + "_" + triaLabel(jj);
     end
 end    
     
 if isstring(lab3)
     
-    L3numel = numel(lab3)
-    VarNamesOut = repmat(VarNamesOut, L3numel, 1);
+    numL3s = numel(lab3)
+    VarNamesOut = repmat(VarNamesOut, numL3s, 1);
     
-    for ii = 1:L3numel
+    for ii = 1:numL3s
         idxSTrng = (rows2iter * ii) - (rows2iter - 1);
         idxENrng = rows2iter * ii;
         VarNamesOut(idxSTrng:idxENrng,:) = VarNamesOut(idxSTrng:idxENrng,:) +...
@@ -90,14 +98,33 @@ end
 
 VarNamesOut = sortrows(VarNamesOut);
 
-if strcmp(srtcorL3, 'true')
+
+% If requested perform sorting on trial labels so that the input order is
+% preserved in the final output.
+if strcmp(sortcorLT, 'true')
+    % srtInterv = numTLs * numTrialRep * numL3s;
+    srtPatern = repelem(triaLabel, numTrialRep*numL3s);  
+    %[M,~] = size(VarNamesOut);
+    [~, srtIDXfwd] = sort(srtPatern);
+    [~, srtIDXrev] = sort(srtIDXfwd);
+    %srtVec = 0:1:(srtInterv-1)
+    VarNamesOut(:,:) = VarNamesOut(srtIDXrev,:);
+   % for ii = 1:srtInterv:M
+       % VarNamesOut(srtVec+ii,:) = VarNamesOut(srtIDXrev + (ii-1),:);
+   % end
+end
+
+
+% If requested perform sorting on trial labels so that the input order is
+% preserved in the final output.
+if strcmp(sortcorL3, 'true')
     
     [M,~] = size(VarNamesOut);
     [~, srtIDXfwd] = sort(lab3);
-    [~, srtIDXrev] = sort(srtIDXfwd);
-    srtVec = 0:1:L3numel-1
+    [~, srtIDXrev] = sort(srtIDXfwd); 
+    srtVec = 0:1:numL3s-1
 
-    for ii = 1:L3numel:M
+    for ii = 1:numL3s:M
         VarNamesOut(srtVec+ii,:) = VarNamesOut(srtIDXrev + (ii-1),:);
     end
 end
