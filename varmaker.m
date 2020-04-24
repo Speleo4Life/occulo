@@ -1,12 +1,3 @@
-% condLabel = ["C1", "C2", "C3"];
-% triaLabel = ["A", "B", "C", "D"];
-% loopTrial = 'true';
-% numTrialRep = 2;
-% lab3 = ["ST", "EN"];
-% srtcor = 'true';
-% lab4 = "IDX";
-
-function VarNamesOut = varmaker(condLabel, triaLabel, loopTrial, numTrialRep, lab3, srtcorL3, lab4) 
 % function VarNamesOut = VarMaker(condLabel, triaLabel, loopTrial,
 % numTrialRep, lab3, lab4)
 % condLabel <STR> A string array containing the condition/group labels
@@ -28,7 +19,9 @@ function VarNamesOut = varmaker(condLabel, triaLabel, loopTrial, numTrialRep, la
 % 
 % Ray R. MacNeil                              
 % UBC, Department of Psychology, Vision Lab   
-% Email: raymond.macneil@mail.utoronto.ca     
+% Email: raymond.macneil@mail.utoronto.ca 
+function VarNamesOut = varmaker(condLabel, triaLabel, loopTrial, numTrialRep, lab3, srtcorL3, lab4)
+
 
 %% Exception Handling and Input Error
 
@@ -42,7 +35,7 @@ if  nargin < 5 || ~exist('lab3', 'var') || isempty(lab3) || ~isstring(lab3)
     lab3 = 1;
 end
 
-if  nargin < 6 || ~exist('srtcor','var') || isempty(srtcorL3) || ~ischar(srtcorL3)
+if  nargin < 6 || ~exist('srtcorL3','var') || isempty(srtcorL3) || ~ischar(srtcorL3)
     srtcorL3 = 'false';    
 end
     
@@ -93,14 +86,10 @@ if isstring(lab4)
     VarNamesOut = VarNamesOut + "_" + lab4;
 end
 
-% You May Need to Edit this to fit your specific sorting requirements
-% determine the length of your sort vector containing the ii+x index with 
-% x >= 0 that represents the swapping pattern 
 VarNamesOut = sortrows(VarNamesOut);
 
 if strcmp(srtcorL3, 'true')
     
-
     [M,~] = size(VarNamesOut);
     [~, srtIDXfwd] = sort(lab3);
     [~, srtIDXrev] = sort(srtIDXfwd);
