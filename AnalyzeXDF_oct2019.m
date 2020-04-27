@@ -2,7 +2,8 @@
 %
 % INPUT:
 % plots <CHR> A character vector set to either 'true' or 'false' indicates
-% whether or not to include the lots in the output.
+% whether or not to include the plots in the output. Do not need to
+% specify. Defaults to false.
 %
 % OUTPUT (all arguments required):
 % event <STRUCT> gives the event struct from the XDF file
@@ -16,9 +17,18 @@
 % Analysis no longer fails if one of the LSL streams is absent
 % If requested, subplots for X and Y gaze data is given in the output
 function [event, elink, opbci] = AnalyzeXDF_oct2019(plots)
+
+% Exception handling, allow for plots argument to go unspecified
+if nargin < 1 || ~exist('plots', 'var') || isempty(plots) || ... 
+        ~ismember(plots,["false","true"])
+    plots = 'false';
+end
+        
+
 SRATE = 250; % sammpling rate
 ISI = 1/SRATE; % inter-sample-interval
 
+% Use GUI to allow user to select the .XDF file to be analyzed
 [xdf_fname, xdf_path] = uigetfile('*.xdf', 'Select a File');
 xdf = load_xdf([xdf_path, xdf_fname]);
 
@@ -32,16 +42,16 @@ elink_strm_exist = false;
 opbci_strm_exist = false;
 
 % Search XDF struct to identify streams
-for i=1:strm_idx_count
+for ii=1:strm_idx_count
     
-    if strcmp(xdf{1,i}.info.name, 'EventMarkers')
-        event_idx = i;   
+    if strcmp(xdf{1,ii}.info.name, 'EventMarkers')
+        event_idx = ii;   
         event_strm_exist = true;
-    elseif strcmp(xdf{1,i}.info.name, 'EyeLink')
-        elink_idx = i;   
+    elseif strcmp(xdf{1,ii}.info.name, 'EyeLink')
+        elink_idx = ii;   
         elink_strm_exist = true;
-    elseif strcmp(xdf{1,i}.info.name, 'OpenBCI_EOG')
-        opbci_idx = i;   
+    elseif strcmp(xdf{1,ii}.info.name, 'OpenBCI_EOG')
+        opbci_idx = ii;   
         opbci_strm_exist = true;
     end
     
@@ -97,7 +107,7 @@ elseif ~opbci_strm_exist
 
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%% EOG Filters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Run EOG Filters
 
 % ob_dat = ob_dat - mean(ob_dat);
  ob_dat_x = detrend(ob_dat_x);
@@ -125,7 +135,7 @@ end
 % ob_time_axis = [0:ISI:ISI*(length(ob_dat)-1)] + opbci.time_stamps(1);
 
      
-%%% Instatiate Event Data %%%
+%% Instatiate Event Data 
 
 if event_strm_exist
 
@@ -141,22 +151,19 @@ elseif ~event_strm_exist
 
 end
 
-%%% Plot Data %%%%
-
-% Create time axis
-t1 = min([el_time_axis(1), ob_time_axis(1), ev_ts(1)]);
-% t2 = max([el_time_axis(end), ob_time_axis(end), ev_ts(end)]);
-% x = 0:ISI:(t2-t1);
-
-el_time_axis = el_time_axis - t1;
-ob_time_axis = ob_time_axis - t1;
-ev_ts = ev_ts - t1;
+%% Generate plots if requested
 
 if strcmp(plots, 'true')
 
+    % Create time axes
+    t1 = min([el_time_axis(1), ob_time_axis(1), ev_ts(1)]);
+    el_time_axis = el_time_axis - t1;
+    ob_time_axis = ob_time_axis - t1;
+    ev_ts = ev_ts - t1;
+
     fig=figure;
     
-    %%% Create Subplot for Gaze X Data %%%
+    % Create Subplot for GazeX Data
     subplot(2,1,1);
     hold on;
     plot(el_time_axis, el_dat_x, 'Color', [0, 0.447, 0.741]);
@@ -167,7 +174,7 @@ if strcmp(plots, 'true')
     hold off
     legend({'EyeLink X', 'EOG X'}, 'AutoUpdate', 'off');
 
-    %%% Create Subplot for Gaze Y Data %%%
+    % Create Subplot for GazeY Data
     subplot(2,1,2);
     hold on;
     plot(el_time_axis, el_dat_y, 'Color', [0.929, 0.694, 0.125]);
@@ -179,7 +186,8 @@ if strcmp(plots, 'true')
     legend({'EyeLink Y', 'EOG Y'}, 'AutoUpdate', 'off');
     
     
-    
+    % Loop through the event struct to localize start, ping, and end trial
+    % segments, and to add this information to the plots
     for jj = 1:2
         subplot(2,1,jj)
         h = gca;
@@ -188,7 +196,8 @@ if strcmp(plots, 'true')
             event_tag = event.time_series{ii};
             event_tag_split = strsplit(event_tag,'_');
             if startsWith(event_tag_split{1}, 't')
-                if ~strcmp(event_tag_split{2}, 'cal') && strcmp(event_tag_split{2}, 'exp')
+                if ~strcmp(event_tag_split{2}, 'cal') &&...
+                        strcmp(event_tag_split{2}, 'exp')
                     if strcmp(event_tag_split{4}, 'start')
                         line([ev_ts(ii) ev_ts(ii)], h.YLim,'Color',[0.1 0.8 0.1])
                     elseif strcmp(event_tag_split{4}, 'ping')

@@ -1,24 +1,26 @@
 % Closed-Eyes EyeLink Data Analysis
 % Raymond MacNeil, 2020-February
 % Vision Lab, Department of Psychology, University of British Columbia
-
-% Define file names for analysis
-cd '/Users/ray.macneil/Nextcloud/ubc_vision/occulo_imagery/data/Real_Participant_Data/EDFS'
-ext = '.edf'
-fileIDs = ls;
-fileIDs = transpose(sort(string(regexp(fileIDs, ['\w*' ext],...
-    'match'))));
-subj_count = numel(unique(extractBefore(fileIDs, '_')));
+% Updated April 27th, 2020
 
 
-%Import files batchwise
+%% Data Import 
+
+% Get .EDF files to be analyzed
+[fileIDs, fileDir]=uigetfile('MultiSelect','On','*.edf');
+fileIDs = transpose(sort(string(fileIDs)));
+N = numel(unique(extractBefore(fileIDs, '_'))); 
+
+
+% Import files batchwise and store in struct array
+cd(fileDir);
 for ii = 1:length(fileIDs)
    
    try
        subj = extractBefore(fileIDs(ii), '_');
-       cond = extractBetween(fileIDs(ii), '_', ext);
+       cond = extractBetween(fileIDs(ii), '_', '.edf');
        edfm = Edf2Mat(char(fileIDs(ii)));
-       edfall.(subj).(cond) = edfm;
+%      edfall.(subj).(cond) = edfm;
        edfevt.(subj).(cond) = edfm.RawEdf.FEVENT;
    catch
        warning('There was a problem with file: %s', fileIDs(ii));
@@ -26,48 +28,52 @@ for ii = 1:length(fileIDs)
 
 end
 
-% Declare out main results table, initially setting up variables for
-% calibration info
-T = table('Size', [subj_count 4], 'VariableTypes',...
-     {'cellstr', 'string', 'string', 'string'}, 'VariableNames',...
-     {'pid', 'c1cal', 'c2cal', 'c3cal'});
-T.Properties.Description = 'Closed-Eyes EyeLink Data | MacNeil | Vision Lab | 2020'
-ssize = numel(fieldnames(edfevt));
-field_names = char(fieldnames(edfevt));
-pids = unique(extractBefore(fileIDs, '_'))
-T.pid = categorical(pids);
+%% Get calibration information for each subject and condition 
 
-% Extract calibration information
-for ii = 1:ssize
-    fname = field_names(ii,:);
-    cfnames = fieldnames(edfevt.(field_names(ii,:)));
+% Preallocate a table for storing the data
+T = table('Size', [N 4], 'VariableTypes',...
+     {'cellstr', 'string', 'string', 'string'}, 'VariableNames',...
+     {'PID', 'C1_CAL', 'C2_CAL', 'C3_CAL'});
+T.Properties.Description = 'Closed-Eyes EyeLink Data | MacNeil | Vision Lab | 2020';
+pidFLDnames = char(fieldnames(edfevt));
+T.PID = categorical(unique(extractBefore(fileIDs, '_')));
+
+% Extract calibration information and store it in our table
+for ii = 1:N
+    fname = pidFLDnames(ii,:);
+    condFLDnames = fieldnames(edfevt.(pidFLDnames(ii,:)));
     
-    for jj = 1:numel(cfnames)
-        idx = find(([edfevt.(fname).(cfnames{jj}).parsedby] == 188),1, 'last');
+    for jj = 1:numel(condFLDnames)
+        idx = find(([edfevt.(fname).(condFLDnames{jj}).parsedby] == 188),1, 'last');
         if ~isempty(idx)
-            T(ii,1+jj) = cellstr(edfevt.(fname).(cfnames{jj})(idx).message); 
+            T(ii,1+jj) = cellstr(edfevt.(fname).(condFLDnames{jj})(idx).message); 
         end
     end
 end
 
+clear cond subj ii jj edfm fileDir idx
 
-% Initialize variable names and types for our table that will subset trial events  
-new_var_names = varmaker(["C1", "C2", "C3"],["A", "B", "C", "D"], 'false',...
+%% Preallocate table to store trial START and END timestamp indices
+
+% Initialize variable names and types for our table that will store store  
+var_names = varmaker(["C1", "C2", "C3"],["A", "B", "C", "D"], 'false',...
     'false', [], ["ST", "EN"], 'true', "IDX");
-vartypes = cellstr(repmat("cell",1,numel(new_var_names))); 
-evt_indices = table('Size', [subj_count numel(new_var_names)],... 
-    'VariableTypes', vartypes, 'VariableNames', new_var_names); 
+var_types = cellstr(repmat("cell",1,numel(var_names))); 
+evt_indices = table('Size', [N numel(var_names)],... 
+    'VariableTypes', var_types, 'VariableNames', var_names); 
 
 % Other key information for subsetting trial events
 letters = {'A'; 'B'; 'C'; 'D'}; 
 seq = {'start'; 'end'};
 
+clear var_names var_types
 
-for ii = 1:ssize
-    fname = field_names(ii,:);
-    cfnames = fieldnames(edfevt.(field_names(ii,:)));
-    for jj = 1:numel(cfnames)
-        get = struct2table(edfevt.(fname).(cfnames{jj}));
+%% Get START and END timestamp indices for each unique trial type
+for ii = 1:N
+    fname = pidFLDnames(ii,:);
+    condFLDnames = fieldnames(edfevt.(fname));
+    for jj = 1:numel(condFLDnames)
+        get = struct2table(edfevt.(fname).(condFLDnames{jj}));
         check = cellfun(@(x) isempty(x), get.message);
         get.message(check) = {""};
         extract = string(get.message);
@@ -85,8 +91,7 @@ for ii = 1:ssize
                 elseif ll == 2
                      evt_indices(ii,x+(kk+kk)) = {find(contains(extract,...
                         '_exp_') & contains(extract, letters(kk))...
-                        & contains(extract, seq(ll)))};
-            
+                        & contains(extract, seq(ll)))};        
                 end
             end
         end  
@@ -94,16 +99,18 @@ for ii = 1:ssize
         
 end
 
-vnames = {'c1a_idx', 'c1b_idx', 'c1c_idx', 'c1d_idx',...
-    'c2a_idx', 'c2b_idx', 'c2c_idx', 'c2d_idx',...
-    'c3a_idx', 'c3b_idx', 'c3c_idx', 'c3d_idx'};
-vtypes = cellstr(repmat("cell", 1, numel(vnames)));
-tevt = table('Size', [subj_count, numel(vnames)], 'VariableTypes', vtypes,...
-    'VariableNames', vnames);
+%% Using the above info, determine the index range for each trial's timestamp range
 
+% Intialize and preallocate a table for storing the data
+var_names = {'C1_A_IDX', 'C1_B_IDX', 'C1_C_IDX', 'C1_D_IDX',...
+    'C2_A_IDX', 'C2_B_IDX', 'C2_C_IDX', 'C2_D_IDX',...
+    'C3_A_IDX', 'C3_B_IDX', 'C3_C_IDX', 'C3_D_IDX'};
+var_types = cellstr(repmat("cell", 1, numel(var_names)));
+TEVT = table('Size', [N, numel(var_names)], 'VariableTypes', var_types,...
+    'VariableNames', var_names);
 
-
-for ii = 1:ssize
+% Extract the information using the data in evt_indices table
+for ii = 1:N
     d = 1;
     for jj = 1:2:width(evt_indices)-1
         holder1 = table2array(evt_indices(ii,jj));
@@ -114,67 +121,87 @@ for ii = 1:ssize
         for kk = 1:loopsz
             temp{kk}= holder1{:}(kk):holder2{:}(kk);  
         end
-        tevt{ii,d} = {temp};
+        TEVT{ii,d} = {temp};
         d=d+1;
     end
 end
 
-MATRIX = zeros(subj_count,120);
-MATRIX2 = zeros(subj_count,12);
+clear holder1 holder2 var_names var_types x ii jj kk loopsz d
+clear temp new_var_names extract check 
 
-%Declare variables for accuracy calculations
+%% Preallocate variables for main loop extracting event information
+MATRIX = zeros(N,120);
+MATRIX2 = zeros(N,12);
+
+%% Declare variables for accuracy calculations
 ABidxVals = [1 2 5 6 9 10];
 CDidxVals = [3 4 7 8 11 12];
-smX_eccentric_offset = 161.40665321197295
-lgX_eccentric_offset = 326.4192270718748
-degpix = 0.06537277453582728
-ABS = [980-lgX_eccentric_offset, 980-smX_eccentric_offset, 980+smX_eccentric_offset, 980+lgX_eccentric_offset]'
+ABCDidxVals = [ABidxVals, CDidxVals];  
+smX_eccentric_offset = 161.40665321197295; % Units are Pixels
+lgX_eccentric_offset = 326.4192270718748; % Units are Pixels
+degpix = 0.06537277453582728; % Degrees visual angle per Pixel
+xHOME = 980; % Homebase marker is at 980 pixels along x-axis
+ABS = [xHOME-lgX_eccentric_offset, xHOME-smX_eccentric_offset,...
+    xHOME+smX_eccentric_offset, xHOME+lgX_eccentric_offset]';
 
 
-%% Main Loop %%
+%% Loop to calculate amplitude variables
+for ii = 1:N
+    fname = pidFLDnames(ii,:);
+    condFLDnames = fieldnames(edfevt.(pidFLDnames(ii,:)));
+    CondLoop = repelem(string(condFLDnames), numel(letters));
 
-for ii = 1:ssize
-    fname = field_names(ii,:)
-    cfnames = fieldnames(edfevt.(field_names(ii,:)))
-    cond_loop_tags = "";
-    
-    if numel(cfnames) < 3
-       cond_loop_tags = string(repmat(cfnames{1}, numel(letters),1))
-       cond_loop_tags = [cond_loop_tags; strrep(cond_loop_tags, '1', '2')];  %#ok<AGROW>
-    else
-       cond_loop_tags = string(repmat(cfnames{1}, numel(letters),1)); 
-       cond_loop_tags = [cond_loop_tags; strrep(cond_loop_tags, '1', '2');...
-           strrep(cond_loop_tags, '1', '3')];  %#ok<AGROW>
-    end
 
-    for jj = 1:numel(cond_loop_tags)
-        dud_trial = false;
-        if (jj == 1) || cond_loop_tags{jj}(2) ~= cond_loop_tags{jj-1}(2) 
-            get = struct2table(edfevt.(fname).(cond_loop_tags{jj}));
-            hget = NaN(height(get),1);
-            ampl_x = hget;
-            ampl_y = hget;
-            ampl_xy = hget;
+    for jj = 1:numel(CondLoop)
+        
+        
+        if (jj == 1) || CondLoop{jj}(2) ~= CondLoop{jj-1}(2) 
             
-            for mm = 1:height(get)
-                if strcmp('ENDSACC', get.codestring(mm)) || strcmp('ENDFIX',...
-                        get.codestring(mm))
-                    ampl_x(mm) = (get.genx(mm) - get.gstx(mm))...
-                        / ((get.eupd_x(mm) + get.supd_x(mm))/2);
-                    ampl_y(mm) = (get.geny(mm) - get.gsty(mm))...
-                        / ((get.eupd_y(mm) + get.supd_y(mm))/2);
-                    ampl_xy(mm) = sqrt(ampl_x(mm).^2 + ampl_y(mm).^2);
+            get = struct2table(edfevt.(fname).(CondLoop{jj}));
+            ampX = NaN(height(get),1);
+            ampY = NaN(height(get),1);
+            ampXY = NaN(height(get),1);
+            
+            for kk = 1:height(get)
+                
+                if strcmp('ENDSACC', get.codestring(kk)) || strcmp('ENDFIX',...
+                        get.codestring(kk))
+                    ampX(kk) = (get.genx(kk) - get.gstx(kk))...
+                        / ((get.eupd_x(kk) + get.supd_x(kk))/2);
+                    ampY(kk) = (get.geny(kk) - get.gsty(kk))...
+                        / ((get.eupd_y(kk) + get.supd_y(kk))/2);
+                    ampXY(kk) = sqrt(ampX(kk).^2 + ampY(kk).^2);
                 end
                 
             end
             
-            get = addvars(get, ampl_x, 'After', 'genx');
-            get = addvars(get, ampl_y, ampl_xy, 'After', 'eupd_y');
+            get = addvars(get, ampX, 'After', 'genx');
+            get = addvars(get, ampY, ampXY, 'After', 'eupd_y');
             evtdur = get.entime - get.sttime;
             get = addvars(get, evtdur, 'After', 'entime');
+            get = removevars(get,{'hstx', 'hsty', 'henx', 'heny', 'sta', 'ena',...
+               'havx', 'havy', 'ava', 'status', 'flags', 'input', 'buttons',...
+               'time', 'type', 'read', 'eye'});
+            get = movevars(get, {'genx', 'gavx', 'ampX', 'ampXY'}, 'After', 'gstx');
+            get = movevars(get, 'ampY', 'After', 'gavy');
+            get = movevars(get, 'codestring', 'Before', 'sttime');
+            edfevt.(fname).(CondLoop{jj}) = table2struct(get);
         end
+    end
+end
+
+
+%% Main Loop %%
+
+for ii = 1:N
+    fname = pidFLDnames(ii,:)
+    condFLDnames = fieldnames(edfevt.(pidFLDnames(ii,:)))
+    CondLoop = repelem(string(condFLDnames), numel(letters))
+    
+    for jj = 1:numel(CondLoop)
         
-        idx = tevt{ii,jj};
+        dud_trial = false;
+        idx = TEVT{ii,jj};
         key_evts = zeros(10,numel(idx{:}));
         
         for kk = 1:numel(idx{:})
@@ -253,7 +280,7 @@ for ii = 1:ssize
                 if ~dud_trial
                 % Get minnimum X and Y gaze coordinates
                 [min_gazex, Imng] = min(evtsubT.genx(1:end));
-                min_gazey = evtsubT.geny(Imng);
+                 min_gazey = evtsubT.geny(Imng);
                 
                 % Get saccade amplitudes
                 [max_amplx, Imxa] = min(evtsubT.ampl_x(1:end));
@@ -391,8 +418,6 @@ for ii = 1:ssize
                     [max_amplx, Imxa] = max(evtsubT.ampl_x);
                     max_amplxy = max(evtsubT.ampl_xy(Imxa));
                     
-                  
-                    
                     
 %                     boundtol = 200;
 %                     for hh = 40:boundtol
@@ -518,7 +543,7 @@ newvars = cell2table(newvars)
 newvars.Properties.VariableNames=vnames2
 
 T4 = [T newvars];
-T2.pid = unique(extractBefore(fileIDs, '_'));
+T2.PID = unique(extractBefore(fileIDs, '_'));
 
 
 ad_acrry_c1 = nanmean([T4.a_acrcy_c1, T4.d_acrcy_c1], 'all')
