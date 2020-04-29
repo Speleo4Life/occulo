@@ -32,14 +32,12 @@ ob_features = get_features(event_struct, opbci_struct, calibration_factor_eog, "
 elink_features = get_features(event_struct, elink_struct, calibration_factor_elink, "EyeLink", remove_outliers);
 % elink_features = ob_features;
 
-
 "Calibration factor - EOG: " + calibration_factor_eog
-"EOG Mean Accuracies: " + num2str(ob_features.accuracy)
-"EOG Max Accuracy: " + ob_features.max_accuracy
-
+% "EOG Mean Accuracies: " + num2str(ob_features.accuracy)
+% "EOG Max Accuracy: " + ob_features.max_accuracy
 "Calibration factor - Elink: " + calibration_factor_elink
-"Elink Mean Accuracies: " + num2str(elink_features.accuracy)
-"Elink Max Accuracy: " + elink_features.max_accuracy
+% "Elink Mean Accuracies: " + num2str(elink_features.accuracy)
+% "Elink Max Accuracy: " + elink_features.max_accuracy
 
 copy_table = [];
 errors = [];
@@ -72,17 +70,24 @@ for i = 1:length(points)
         eog_col = ob_features.all_accuracy.(point);
         diff_col = abs(elink_col-eog_col);
         diff_iqr = iqr(diff_col);
-        iqr_filt = abs(eog_col - elink_col) > mean(diff_col) + 1.5*diff_iqr;
-        rows_to_remove = [];
+        iqr_filt = diff_col > mean(diff_col) + 1.5*diff_iqr;
+        
+        full_rows_to_remove = [];
+        eog_rows_to_remove = [];
         for j = 1:length(ob_features.all_values.(point))
-            if isnan(eog_col(j)) || isnan(elink_col(j)) || iqr_filt(j)
-                rows_to_remove = [rows_to_remove j];
+            if isnan(elink_col(j))
+                full_rows_to_remove = [full_rows_to_remove j];
+            elseif isnan(eog_col(j)) || iqr_filt(j)
+                eog_rows_to_remove = [eog_rows_to_remove j];
             end
         end     
           
         % Remove appropriate rows in to_append
-        for j=1:length(rows_to_remove)
-            to_append(rows_to_remove(j), :) = NaN;
+        for j=1:length(eog_rows_to_remove)
+            to_append(eog_rows_to_remove(j), 1:4) = NaN; % Remove EOG outliers
+        end
+        for j=1:length(full_rows_to_remove)
+            to_append(full_rows_to_remove(j), :) = NaN;
         end
     end
     
@@ -92,8 +97,6 @@ for i = 1:length(points)
     end
     copy_table = [copy_table, to_append];
 end
-
-
 
 % Format copy_table for Excel 
 % Mag Acc PV Lat for A B C D for EOG, then Elink
@@ -108,10 +111,6 @@ empty_col = string(zeros(size(copy_table,1), 1));
 empty_col(:) = "";
 copy_table = [eog_half empty_col elink_half];
 close all;
-
-
-
-
 
 % % Bar plot of accuracies
 % figure()
