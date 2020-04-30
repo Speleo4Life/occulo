@@ -109,31 +109,10 @@ end
 
 %% Run EOG Filters
 
-% ob_dat = ob_dat - mean(ob_dat);
  ob_dat_x = detrend(ob_dat_x);
  ob_dat_y = detrend(ob_dat_y);
  ob_dat_x = bandpass(ob_dat_x,[0.6, 35], 250);
  ob_dat_y = bandpass(ob_dat_y,[0.6, 35], 250);
- 
-% ob_dat_x = sgolayfilt(double(ob_dat_x),5,111);
-% ob_dat_y = sgolayfilt(double(ob_dat_y),5,111);
-% 
-% Wo = 60/(250/2);  
-% BW = Wo/35;
-% [k,l] = iirnotch(Wo,BW);  
-% ob_dat = filter(k,l,ob_dat);
-% ob_dat = sgolayfilt(ob_dat,5,111);
-% ob_dat(ob_dat>2000) = NaN;
-% ob_dat(ob_dat<-2000) = NaN;
-% 
-% ob_dat = lowpass(ob_dat,35,250);
-% ob_dat = highpass(ob_dat,0.5,250);
-% ob_dat = bandpass(ob_dat,[0.3,35],250);
-% ob_dat = bandpass(ob_dat,[0.3,35],250);
-
-% ob_time_axis = ob_ts_w_offsets + opbci.time_stamps(1);
-% ob_time_axis = [0:ISI:ISI*(length(ob_dat)-1)] + opbci.time_stamps(1);
-
      
 %% Instatiate Event Data 
 
