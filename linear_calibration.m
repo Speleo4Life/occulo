@@ -1,7 +1,8 @@
-function [calibration_factor] = linear_calibration(event_struct, data, threshold)
+function [calibration_factor] = linear_calibration(event_struct,...
+    data_struct, threshold, plots) 
 
-event_struct = event_struct;  % struct containing time_series (labels) and time_stamps (times)
-data_struct = data; % Same as above, for EOG/Elink data
+% event_struct: struct containing time_series (labels) and time_stamps (times)
+% data_struct: Same as above, for EOG/Elink data
 
 calibration_angles = [-22 -11 11 22];
 
@@ -9,33 +10,17 @@ calibration_angles = [-22 -11 11 22];
 % [start ping end] for each row
 times = struct('A', [], 'B', [], 'C', [], 'D', []);
 points = fieldnames(times);
+numEvt2Find = 3; % Per trial: Start, Ping, Stop
+numCalTrial = 5; % Per point/marker
  
 % Get start and stop times
-% Extract [start ping end] times from time series and time stamps
-% Assume ping and stop always follow start, in that order
-for ind = 1:length(event_struct.time_series)
-    if strcmp(event_struct.time_series(ind), "exp_start")
-        exp_start_ind = ind;
-        break
-    end
-    
-    % Extract tag name, eg, t1_calib_H_A_start
-    tag = strsplit(event_struct.time_series{ind},'_');  
-    
-    % If calibration and horizontal
-    if startsWith(tag{1}, 't') ...
-      && strcmp(tag{2}, 'calib') ...
-      && strcmp(tag{3}, 'H') ...
-      && strcmp(tag{5}, 'start')
-        % Validate
-        if ~ismember(tag{4}, points)
-            error(tag{4} + " not a valid point")
-        else
-            % Add to matrix
-            toAdd = [event_struct.time_stamps(ind) event_struct.time_stamps(ind+1) event_struct.time_stamps(ind+2)];
-            times.(tag{4}) = [times.(tag{4}); toAdd];
-        end
-    end
+% Extract [start ping end] indices from time series event labels and use
+% these to assign the relevant timestamp values to the times struct
+for ii = 1:numel(points)
+    exp = strcat('t\d*_calib_H_', points{ii});
+    idxHzCal = ~cellfun('isempty', regexp(event_struct.time_series, exp)); 
+    times.(points{ii}) = reshape(event_struct.time_stamps(idxHzCal),numEvt2Find,...
+        numCalTrial)';
 end
 
 % Values of each saccade
@@ -44,9 +29,7 @@ values = struct('A', [], 'B', [], 'C', [], 'D', []);
 % For each point, add corresponding saccade voltage value to array - taking
 % points between (start + (ping-start)/2) and ping
 dat_x = data_struct.time_series;
-% opbci_dat_x = data_struct.time_series(1, :);
-% opbci_dat_x = detrend(opbci_dat_x);
-% opbci_dat_x = bandpass(opbci_dat_x,[0.6,35],250);
+
 
 for i = 1:length(points)
     point = points{i};
@@ -57,6 +40,8 @@ for i = 1:length(points)
         ping = times.(point)(row, 2);
         stop = times.(point)(row, 3);
         saccade = []; % Single saccade
+%         test = find((data_struct.time_stamps >= start) &...
+%             (data_struct.time_stamps < stop))
       
         
         % Loop through data
@@ -72,26 +57,20 @@ for i = 1:length(points)
             
         end
         
-        cutoffs = findchangepts(saccade, "MaxNumChanges", 2); % Isolate saccade using changepoints
+        % Isolate saccade using changepoints
+        cutoffs = findchangepts(saccade, "MaxNumChanges", 2); 
         
         % If insufficient changepoints found
         if length(cutoffs) < 2
-%               continue
-              cutoffs = [1 length(saccade)];
+            cutoffs = [1 length(saccade)];
         end
         
-        %Plot individual saccades
-%         figure()
-%         plot(saccade)
-%         xline(cutoffs(1));
-%         xline(cutoffs(2));
-
-        % Only take peaks of saccade
         peaks = findpeaks(abs(saccade(cutoffs(1): cutoffs(2))));
         % If there are no peaks in isolated region, then take entire length
-        if(length(peaks) == 0)
+        if(isempty(peaks))
             peaks = findpeaks(abs(saccade));
         end
+        
         peaks = peaks(peaks > threshold(1) & peaks < threshold(2));
         
         if strcmp(point, 'A') || strcmp(point, 'B')
@@ -132,15 +111,17 @@ end
 % Linear fit - m is calibration factor: angle = m*voltage
 calibration_factor = calibration_angles/average_voltages;
 
-% Plots
-figure()
-errorbar(calibration_angles,average_voltages, errors, ...
-   's','MarkerSize',5,'MarkerEdgeColor','black','MarkerFaceColor','black')
-title('Calibration Curve : Voltage vs. Angle Plot');
-hold on 
-plot(calibration_angles, calibration_angles/calibration_factor);
-xlabel('Saccade size - degrees'); 
-ylabel('Voltage -  milli volts'); 
-legend('Calibration experimental data','Fitted curve');
+if plots
+    % Plots
+    figure()
+    errorbar(calibration_angles,average_voltages, errors, ...
+        's','MarkerSize',5,'MarkerEdgeColor','black','MarkerFaceColor','black')
+    title('Calibration Curve : Voltage vs. Angle Plot');
+    hold on
+    plot(calibration_angles, calibration_angles/calibration_factor);
+    xlabel('Saccade size - degrees');
+    ylabel('Voltage -  milli volts');
+    legend('Calibration experimental data','Fitted curve');
+end
 
 end
