@@ -39,24 +39,25 @@ for i = 1:length(points)
         start = times.(point)(row, 1);
         ping = times.(point)(row, 2);
         stop = times.(point)(row, 3);
-        saccade = []; % Single saccade
-%         test = find((data_struct.time_stamps >= start) &...
-%             (data_struct.time_stamps < stop))
-      
+        saccade = dat_x((data_struct.time_stamps >= start) &...
+              (data_struct.time_stamps < stop));
+
         
-        % Loop through data
-        for ind = 1:length(data_struct.time_stamps)
-            
-            if data_struct.time_stamps(ind) > stop
-                break
-            end
-            
-            if data_struct.time_stamps(ind) >= start
-               saccade = [saccade dat_x(ind)]; % Append to array
-            end
-            
-        end
-        
+       % Loop through data
+%         tic
+%         saccade = [];
+%         for ind = 1:length(data_struct.time_stamps)
+%             
+%             if data_struct.time_stamps(ind) > stop
+%                 break
+%             end
+%             
+%             if data_struct.time_stamps(ind) >= start
+%                saccade = [saccade dat_x(ind)]; % Append to array
+%             end
+%             
+%         end
+%         toc
         % Isolate saccade using changepoints
         cutoffs = findchangepts(saccade, "MaxNumChanges", 2); 
         
