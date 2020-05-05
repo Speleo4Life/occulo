@@ -284,6 +284,7 @@ ResultsTable.Properties.VariableNames = FinalHeaders;
 catch
 sprintf('Variable Name Conflicts. Format the table from the ''ResultsCell'' output.')
 end
+end
 
 % nanIDX1 = isnan(cell2mat(ResultsCell(2:end,:,1)));
 % Check1Cell = single(cell2mat(ResultsCell(2:end,:,1)));
