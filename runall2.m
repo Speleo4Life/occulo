@@ -42,7 +42,9 @@
 % Until I expand functionality, I reccomend commenting out the final line
 % of code and just requesting the ResultsCell output. At that point, if you
 % wanted to convert the cell into a table, you will need to modify the
-% variable names so that there are no duplicates. 
+% variable names so that there are no duplicates. However, if you just
+% specify the ResultsCell as your output, you will have no problems
+% whatsoever. 
 %
 % Overhaul by Ray MacNeil (UBC, Psychology), May 1, 2020
 % GitHub Repository: https://github.com/Speleo4Life/occulo
@@ -151,7 +153,7 @@ for II = 1:numel(xdf_fname)
         elink_features = ob_features;
     end
     
-    SumStats = ["Calibration factor - EOG: " + calibration_factor_eog;
+    SumStats(:,II) = ["Calibration factor - EOG: " + calibration_factor_eog;
         "EOG Mean Accuracies: " + num2str(ob_features.accuracy);
         "EOG Max Accuracy: " + ob_features.max_accuracy;
         "Calibration factor - Elink: " + calibration_factor_elink;
@@ -214,7 +216,7 @@ for II = 1:numel(xdf_fname)
         end
         
         copy_table(:,Idx(ii,:)) = vertcat(num2cell(to_append),...
-            num2cell(errors(:,Idx(ii,:))))
+            num2cell(errors(:,Idx(ii,:))));
     end
     
 Z = numel(points);
@@ -277,8 +279,10 @@ ResultsTable(:,:) = reshape(ResultsCell(2:end,:,:), numTrials+numStat,...
 Cols2Del = cellfun(@(x) contains(x, 'C4_ELINK'), Headers);
 FinalHeaders = Headers(~Cols2Del);
 ResultsTable(:,Cols2Del) = [];
+try
 ResultsTable.Properties.VariableNames = FinalHeaders;
-
+catch
+sprintf('Variable Name Conflicts. Format the table from the ''ResultsCell'' output.')
 end
 
 % nanIDX1 = isnan(cell2mat(ResultsCell(2:end,:,1)));
