@@ -5,24 +5,18 @@
 % select all four .xdf files for a given subject or four .xdf files
 % representing four different subjects. In fact, you could compare two
 % subjects on one or two conditions. The function was designed to have this
-% flexibility, though there were a few parts of the design where how 
-% I envisioned primary use of processing the four .xdf condition files of a
-% single subject. 
-% 
-% 
-% The calibration factors is obtained whenever 'C1' is detected in the
-% file name, so there is indeed dynamicism built into the code structure.
-% separate subjects, but the function was not designed for the latter, so
-% it's not 
+% flexibility, though emphasis is placed on processing the four .xdf files
+% for a single participant, and full testing for bugs related to other
+% work-flows has not been completed.
 %
-% The function does not currently allow for more than four XDF files to be
-% read at a time, though this functionality should be developed.
+% FIXED most issues with preallocation and loop-based increases in variable size. 
 % 
-% INPUT: All OPTIONAL
+% 
+% INPUT: All OPTIONAL (Defaults explained below)
 % remove_outliers <BOOL> 'true' (1) or 'false' (0) indicating
 %       whether or not outlier removal is performed. Defaults to false.
 %
-% plots <BOOL> Logical 'true' (1) or 'false' (2) indicating whether the
+% plots <BOOL> Logical 'true' (1) or 'false' (0) indicating whether the
 %       bar plots for the extracted saccade features are shown.
 %
 % OUTPUT: ALL OPTIONAL 
@@ -32,24 +26,25 @@
 % SumStats <STR ARRAY> A string array with information on the calibration
 %           factors and summary stats for the Elink and EOG accuracy data.
 %
+% xdf_fname <CELL STRING> I added this simply to keep tack of which files I
+% was dealing with. Completely optional. 
+%
 % DEPENDENCIES: get_features.m, linear_calibration.m, and xdf4runall.m
 %
-% IMPORTANT NOTE ABOUT CURRENT CODE LIMITATIONS: I have not performed
-% extensive bug testing for the case in which .XDF files of the same
-% condition are requested. This could prove useful if you wanted to compare
-% subjects of the same condition. There is a bug that will cause the
-% function to terminate at the final line when computing the results table.
-% Until I expand functionality, I reccomend commenting out the final line
-% of code and just requesting the ResultsCell output. At that point, if you
-% wanted to convert the cell into a table, you will need to modify the
-% variable names so that there are no duplicates. However, if you just
-% specify the ResultsCell as your output, you will have no problems
-% whatsoever. 
+% CODE LIMITATIONS: Full bug testing for the case in which .XDF files of the same
+% condition are requested has not be completed. This could prove useful if you 
+% wanted to compare subjects of the same condition, but obviously there are
+% work arounds to this. 
+%
+% Importantly, the results table will not be available if you have .XDF files
+% from the same condition. It will be easy enough to reshape the
+% ResultsCell and rename the headers to account for duplicate variable
+% names.
 %
 % Overhaul by Ray MacNeil (UBC, Psychology), May 1, 2020
 % GitHub Repository: https://github.com/Speleo4Life/occulo
-% Bracnch: improved_eog_workflow
-function [ResultsCell, ResultsTable, SumStats] = runall2(remove_outliers, plots)
+% Branch: improved_eog_workflow
+function [ResultsCell, ResultsTable, SumStats, xdf_fname] = runall2(remove_outliers, plots)
 
 %% Exception Handling
 if nargin < 1 || ~exist('remove_outliers', 'var') || isempty(remove_outliers) ||...
@@ -228,8 +223,6 @@ CopyHead = reshape(Headers(Idx((II*Z-Z+1):(II*Z),:)).',1, numCols);
 copy_table = [cellstr(CopyHead); copy_table]; %#ok<AGROW>
 el_half_idx = cellfun(@(x) contains(x, 'ELINK'), copy_table(1,:));
 ob_half_idx = ~el_half_idx;
-write2table = [copy_table(2:end, ob_half_idx), copy_table(2:end, el_half_idx)];
-M = length(write2table);
 ResultsCell(:,:,II) = [copy_table(:, ob_half_idx), copy_table(:, el_half_idx)];
     
     
@@ -282,39 +275,6 @@ ResultsTable(:,Cols2Del) = [];
 try
 ResultsTable.Properties.VariableNames = FinalHeaders;
 catch
-sprintf('Variable Name Conflicts. Format the table from the ''ResultsCell'' output.')
+fprintf('Variable Name Conflicts. Format the table from the ''ResultsCell'' output.')
 end
 end
-
-% nanIDX1 = isnan(cell2mat(ResultsCell(2:end,:,1)));
-% Check1Cell = single(cell2mat(ResultsCell(2:end,:,1)));
-% Check1Cell(nanIDX1)=single(9999);
-% Check1Tbl = table2array(ResultsTable(:,1:32));
-% Check1Tbl(nanIDX1)=9999;
-% nnz(Check1Cell == Check1Tbl) == numel(Check1Cell)
-% 
-% nanIDX2 = isnan(cell2mat(ResultsCell(2:end,:,2)));
-% Check2Cell = single(cell2mat(ResultsCell(2:end,:,2)));
-% Check2Cell(nanIDX2)=single(9999);
-% Check2Tbl = table2array(ResultsTable(:,33:64));
-% Check2Tbl(nanIDX2)=single(9999);
-% nnz(Check2Cell == Check2Tbl) == numel(Check2Cell)
-% 
-% nanIDX3 = isnan(cell2mat(ResultsCell(2:end,:,3)));
-% Check3Cell = single(cell2mat(ResultsCell(2:end,:,3)));
-% Check3Cell(nanIDX3)=single(9999);
-% Check3Tbl = table2array(ResultsTable(:,65:96));
-% Check3Tbl(nanIDX3)=single(9999);
-% nnz(Check3Cell == Check3Tbl) == numel(Check3Cell)
-% 
-% nanIDX4 = isnan(cell2mat(ResultsCell(2:end,:,4)))
-% Check4Cell = single(cell2mat(ResultsCell(2:end,:,4)));
-% Check4Cell(nanIDX4)=single(9999);
-% Check4Tbl = table2array(ResultsTable(:,97:128));
-% Check4Tbl(nanIDX4)=single(9999);
-% nnz(Check4Cell == Check4Tbl) == numel(Check4Cell);
-
-
-
-
-
