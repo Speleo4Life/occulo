@@ -20,7 +20,7 @@ for ii = 1:numel(points)
     exp = strcat('t\d*_calib_H_', points{ii});
     idxHzCal = ~cellfun('isempty', regexp(event_struct.time_series, exp)); 
     times.(points{ii}) = reshape(event_struct.time_stamps(idxHzCal),numEvt2Find,...
-        numCalTrial)';
+        nnz(idxHzCal)/numEvt2Find)';
 end
 
 % Values of each saccade
