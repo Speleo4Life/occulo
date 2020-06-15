@@ -1,3 +1,5 @@
+function AnalyzeXDF_oct2019(xdf_fname, xdf_path)
+
 %%% Analyze XDF file from Saccade Study
 %   by Jamie Dunkle, 
 %   August 2019, UBC Vision Lab
@@ -5,8 +7,8 @@
 %   Analysis no longer fails if one of the LSL streams is absent
 %   Visualization of data improved, segregated plots for X and Y gaze data 
 
-clc 
-clear all 
+% clc 
+% clear all 
 
 SRATE = 250;
 ISI = 1/SRATE;
@@ -14,7 +16,7 @@ ISI = 1/SRATE;
 % cd C:/Users/VisionLab/Desktop/SaccadeStudy_newLSL/
 % catch
 % end
-[xdf_fname, xdf_path] = uigetfile('..\Data\*.xdf', 'Select a File');
+% [xdf_fname, xdf_path] = uigetfile('..\Data\*.xdf', 'Select a File');
 
 xdf = load_xdf([xdf_path, xdf_fname]);
 
@@ -75,11 +77,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%% EOG Filters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  ob_dat_x = detrend(ob_dat_x);
  ob_dat_y = detrend(ob_dat_y);
- ob_dat_x = bandpass(ob_dat_x,[0.6,35],250);
- ob_dat_y = bandpass(ob_dat_y,[0.6,35],250);
- 
-
-
+%  ob_dat_x = bandpass(ob_dat_x,[0.6,35],250);
+%  ob_dat_y = bandpass(ob_dat_y,[0.6,35],250);
      
 %%% Instatiate Event Data %%%
 
@@ -155,5 +154,17 @@ for ii=1:length(ev_ts)
     end
 end
 end
+
+% Assign variables in caller workspace:
+assignin('caller', "ob_dat_x", ob_dat_x);
+assignin('caller', "el_dat_x", el_dat_x);
+assignin('caller', "ob_time_axis", ob_time_axis);
+assignin('caller', "el_time_axis", el_time_axis);
+assignin('caller', "event", event);
+assignin('caller', "ev_ts", ev_ts);
+assignin('caller', "ev_dat", ev_dat);
+end
+
+
 
 

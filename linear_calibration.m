@@ -1,4 +1,4 @@
-function [calibration_factor] = linear_calibration(event_struct, data, threshold)
+function [calibration_factor] = linear_calibration(event_struct, data, threshold, iqr_scale)
 
 event_struct = event_struct;  % struct containing time_series (labels) and time_stamps (times)
 data_struct = data; % Same as above, for EOG/Elink data
@@ -56,26 +56,12 @@ for i = 1:length(points)
         start = times.(point)(row, 1);
         ping = times.(point)(row, 2);
         stop = times.(point)(row, 3);
-        saccade = []; % Single saccade
-      
-        
-        % Loop through data
-        for ind = 1:length(data_struct.time_stamps)
-            
-            if data_struct.time_stamps(ind) > stop
-                break
-            end
-            
-            if data_struct.time_stamps(ind) >= start
-               saccade = [saccade dat_x(ind)]; % Append to array
-            end
-            
-        end
-        
+
+        saccade = dat_x(data_struct.time_stamps >= start & data_struct.time_stamps <= stop); 
         cutoffs = findchangepts(saccade, "MaxNumChanges", 2); % Isolate saccade using changepoints
         
         % If insufficient changepoints found
-        if length(cutoffs) < 2
+        if length(cutoffs) < 2 || cutoffs(2) - cutoffs(1) < 3
 %               continue
               cutoffs = [1 length(saccade)];
         end
@@ -89,7 +75,7 @@ for i = 1:length(points)
         % Only take peaks of saccade
         peaks = findpeaks(abs(saccade(cutoffs(1): cutoffs(2))));
         % If there are no peaks in isolated region, then take entire length
-        if(length(peaks) == 0)
+        if(isempty(peaks))
             peaks = findpeaks(abs(saccade));
         end
         peaks = peaks(peaks > threshold(1) & peaks < threshold(2));
@@ -101,20 +87,22 @@ for i = 1:length(points)
     end
 end
 
-% Remove outliers - 1.5*IQR from mean
+% Remove outliers - 1.5*IQR
 for i = 1:length(points)
     point = points{i};
     
-    val_avg = mean(values.(point));
+    val_q1q3 = quantile(values.(point), [0.25, 0.75]);
     val_iqr = iqr(values.(point));
+    val_filter = values.(point) >= val_q1q3(1) - iqr_scale*val_iqr & ...
+        values.(point) <= val_q1q3(2) + iqr_scale*val_iqr;
     
-    val_filter = abs(values.(point)-val_avg) < 1.5*val_iqr;
     
     % Increase IQR until more than 80% of data points remain
-    iqr_scale = 1.5;
+    new_iqr_scale = iqr_scale;
     while nnz(val_filter)/numel(val_filter) < 0.8
-        iqr_scale = iqr_scale + 0.1;
-        val_filter = abs(values.(point)-val_avg) < iqr_scale*val_iqr;
+        new_iqr_scale = new_iqr_scale + 0.1;
+        val_filter = values.(point) >= val_q1q3(1) - new_iqr_scale*val_iqr & ...
+            values.(point) <= val_q1q3(2) + new_iqr_scale*val_iqr;
     end
     
     values.(point) = values.(point)(val_filter);

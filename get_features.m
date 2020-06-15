@@ -1,4 +1,4 @@
-function features_struct = get_features(event_struct, data, calibration_factor, label, remove_outliers)
+function features_struct = get_features(event_struct, data, calibration_factor, label, remove_outliers, iqr_scale)
 
 event = event_struct;
 data_struct = data;
@@ -17,7 +17,6 @@ for ind = 1:length(event.time_series)
     % Extract tag name, eg, t20_exp_D_end
     tag = strsplit(event.time_series{ind},'_');  
     
-    % If calibration and horizontal
     if startsWith(tag{1}, 't') ...
       && strcmp(tag{2}, 'exp') ...
       && strcmp(tag{4}, 'start')
@@ -66,24 +65,16 @@ for i = 1:length(points)
         start = exp_times.(point)(row, 1);
         ping = exp_times.(point)(row, 2);
         stop = exp_times.(point)(row, 3);
-        saccade = []; % Single saccade
-      
-        % Loop through data, extract saccade
-        for ind = 1:length(data_struct.time_stamps)
-            if data_struct.time_stamps(ind) > stop
-                break
-            end
-            if data_struct.time_stamps(ind) >= start
-               saccade = [saccade angle_data(ind)]; % Append to array
-            end
-        end
+        
+        % Extract saccade
+        saccade = angle_data(data_struct.time_stamps >= start & data_struct.time_stamps <= stop); 
         
         % Isolate saccade using changepoints
         cutoffs = findchangepts(saccade, "MaxNumChanges", 2); 
         
         get_latency = true; % Flag for considering latency of current saccade
         % If insufficient changepoints found
-        if length(cutoffs) < 2
+        if length(cutoffs) < 2 || cutoffs(2) - cutoffs(1) < 3
             get_latency = false; % Disregard this saccade for latency
             cutoffs = [1 length(saccade)];
             
@@ -110,10 +101,10 @@ for i = 1:length(points)
 %         peaks = peaks(peaks > threshold(1) & peaks < threshold(2))
 
         % If there are no peaks in isolated region, then take entire length
-        if(length(peaks) == 0)
+        if(isempty(peaks))
             peaks = findpeaks(abs(saccade));
         end
-        if(length(peaks) ==0)
+        if(isempty(peaks))
             peaks = abs(saccade);
         end
         if strcmp(point, 'A') || strcmp(point, 'B')
@@ -134,42 +125,56 @@ for i = 1:length(points)
     end
 end
 
-% Remove outliers - 1.5*IQR from mean
+% Get number of removed latency points
+num_removed_latencies = struct();
+for i = 1:length(points)
+    point = points{i};
+    num_removed_latencies.(point) = sum(isnan(all_latencies.(point)));
+end
+
+% Remove outliers - iqr_scale*IQR 
 for i = 1:length(points)
     point = points{i};
     
-    acc_avg = mean(exp_values.(point));
+    acc_q1q3 = quantile(exp_values.(point), [0.25, 0.75]);
     acc_iqr = iqr(exp_values.(point));
-    vel_avg = mean(peak_vel_values.(point));
+    vel_q1q3 = quantile(peak_vel_values.(point), [0.25, 0.75]);
     vel_iqr = iqr(peak_vel_values.(point));
-    latency_avg = mean(latencies.(point));
-    latency_iqr = iqr(latencies.(point));
+    lat_q1q3 = quantile(latencies.(point), [0.25, 0.75]);
+    lat_iqr = iqr(latencies.(point));
     
     % Increase iqr range until 80% data is kept
-    acc_filter = abs(exp_values.(point)-acc_avg) < 1.5*acc_iqr;
-    iqr_scale = 1.5;
-    while nnz(acc_filter)/numel(acc_filter) < 0.8
-        iqr_scale = iqr_scale + 0.1;
-        acc_filter = abs(exp_values.(point)-acc_avg) < iqr_scale*acc_iqr;
-    end
+    % NO 80 percent limit for now
+    acc_filter = exp_values.(point) >= acc_q1q3(1) - iqr_scale*acc_iqr & ...
+        exp_values.(point) <= acc_q1q3(2) + iqr_scale*acc_iqr;
+%     new_iqr_scale = iqr_scale;
+%     while nnz(acc_filter)/numel(acc_filter) < 0.8
+%         new_iqr_scale = new_iqr_scale + 0.1;
+%         acc_filter = exp_values.(point) >= acc_q1q3(1) - new_iqr_scale*acc_iqr & ...
+%           exp_values.(point) < acc_q1q3(2) + new_iqr_scale*acc_iqr;
+%     end
     
-    vel_filter = abs(peak_vel_values.(point)-vel_avg) < 1.5*vel_iqr;
-    iqr_scale = 1.5;
-    while nnz(vel_filter)/numel(vel_filter) < 0.8
-        iqr_scale = iqr_scale + 0.1;
-        vel_filter = abs(peak_vel_values.(point)-vel_avg) < iqr_scale*vel_iqr;
-    end
+    vel_filter = peak_vel_values.(point) >= vel_q1q3(1) - iqr_scale*vel_iqr & ...
+        peak_vel_values.(point) <= vel_q1q3(2) + iqr_scale*vel_iqr;
+%     new_iqr_scale = iqr_scale;
+%     while nnz(vel_filter)/numel(vel_filter) < 0.8
+%         new_iqr_scale = new_iqr_scale + 0.1;
+%         vel_filter = peak_vel_values.(point) >= vel_q1q3(1) - new_iqr_scale*vel_iqr & ...
+%           peak_vel_values.(point) <= vel_q1q3(2) + new_iqr_scale*vel_iqr;
+%     end
     
-    lat_filter = abs(all_latencies.(point)-latency_avg) < 1.5*latency_iqr;
-    iqr_scale = 1.5;
-    while nnz(lat_filter)/numel(lat_filter) < 0.8
-        % Deal with existing NaN values
-        if iqr_scale > 10
-            break;
-        end
-        iqr_scale = iqr_scale + 0.1;
-        lat_filter = abs(all_latencies.(point)-latency_avg) < iqr_scale*latency_iqr;
-    end
+    lat_filter = all_latencies.(point) >= lat_q1q3(1) - iqr_scale*lat_iqr & ...
+        all_latencies.(point) <= lat_q1q3(2) + iqr_scale*lat_iqr;
+%     new_iqr_scale = iqr_scale;
+%     while nnz(lat_filter)/numel(lat_filter) < 0.8
+%         % Deal with existing NaN values
+%         if iqr_scale > 10
+%             break;
+%         end
+%         new_iqr_scale = new_iqr_scale + 0.1;
+%         lat_filter = all_latencies.(point) >= lat_q1q3(1) - new_iqr_scale*lat_iqr & ...
+%           all_latencies.(point) <= lat_q1q3(2) + new_iqr_scale*lat_iqr;
+%     end
     
     % Replace outlier values with NaN
     all_exp_values.(point) = exp_values.(point);
@@ -296,5 +301,6 @@ features_struct = struct( ...
     "all_accuracy", all_accuracy_values, "accuracy", accuracy, ...
     "accuracy_error", accuracy_error,  "max_accuracy", max(accuracy),...
     "all_peak_vel", all_peak_vel_values, "peak_vel", peak_vel, "peak_vel_error", peak_vel_error, ...
-    "all_latency", all_latencies, "latency", latency, "latency_error", latency_error);
+    "all_latency", all_latencies, "latency", latency, "latency_error", latency_error,...
+    "num_removed_latency", num_removed_latencies);
 end

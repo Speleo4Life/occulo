@@ -1,148 +1,219 @@
-format long;
-% AnalyzeXDF_oct2019;
+clear;
+addpath('Filters','-end');
 
 % Parameters
-calibration_factor_eog = 0.405666328;
-calibration_factor_elink = 0.075804808;
-remove_outliers = true;
-
-opbci_threshold = [15 100]; % Threshold for filtering EOG saccade
+opbci_threshold = [-inf inf]; % Threshold for filtering EOG saccade
 elink_threshold = [-inf inf];
+outlier_iqr_scale = 1.5;
+filter_types = {@(~, ~, x, ~, ~)bandpass(x.time_series,[0.6,35],250) @KFBrownian @KFConstVel @ConstAcc ... 
+    @KFWesthInputAll, @LinearRecipoAll};
+filter = filter_types{6};
+% For WH filter Q = 0.6
+% LR filter Q = 0.1
+% Else Q = 0.012
+Q = 0.1;
 
-if isnan(ob_dat_x(1))
-    ob_dat_x(1) = 0;
+excel_fname = "LR_0.1.xlsx";
+plot_folder_name = "Plots_LR_0.1";
+participant_range = [10 11];
+write_excel = false;
+save_plots = false;
+
+main_path = uigetdir;
+xdf_paths = dir(main_path);
+xdf_paths = xdf_paths([xdf_paths(:).isdir]);
+xdf_paths = xdf_paths(~ismember({xdf_paths(:).name},{'.','..'}));
+
+conditions = ["C1", "C2", "C3", "C4"];
+
+% Format headers
+points = ["A" "B" "C" "D"];
+if write_excel
+    headers = strings(3, 33);
+    headers(1, 1) = "EOG";
+    headers(1, 18) = "Elink";
+    for i = 1:length(points)
+        headers(2, (i-1)*4 + 1) = points(i);
+        headers(2, (i-1)*4 + 18) = points(i);
+        headers(3, (i-1)*4 + 1: (i-1)*4 + 4) = ["Mag" "Acc" "Pvel" "Lat"];
+        headers(3, (i-1)*4 + 18: (i-1)*4 + 21) = ["Mag" "Acc" "Pvel" "Lat"];
+    end
+    headers = [headers strings(3, 1) [strings(2, 4); "Diff_A" "Diff_B" "Diff_C" "Diff_D"]];
+    for i = 1:length(conditions)
+        if strcmp(conditions(i), "C4")
+            xlswrite(excel_fname, headers(:, 1:16), conditions(i), "B1");
+            xlswrite(excel_fname, headers(:, 1:16), conditions(i) + "_out", "B1");
+        else
+            xlswrite(excel_fname, headers, conditions(i), "B1");
+            xlswrite(excel_fname, headers, conditions(i) + "_out", "B1");
+        end
+    end
 end
-if isnan(el_dat_x(1))
-    el_dat_x(1) = 0;
-end
+
+average_matrices = struct("C1", [], "C2", [], "C3", [], "C4", []);
+std_matrices = struct("C1", [], "C2", [], "C3", [], "C4", []);
+average_matrices_out = struct("C1", [], "C2", [], "C3", [], "C4", []);
+std_matrices_out = struct("C1", [], "C2", [], "C3", [], "C4", []);
+participant_array = [];
+
+total_to_write = struct("C1", [], "C2", [], "C3", [], "C4", []);
+total_to_write_out = struct("C1", [], "C2", [], "C3", [], "C4", []);
+calibration_table = strings(length(participant_array) + 2, 6);
+calibration_table(1, 2) = "EOG";
+calibration_table(1, 5) = "Elink";
+calibration_table(2, :) = ["Participant", "C. factor", "Outlier %", "R", "C. factor", "Outlier %"];
+
+row = 3;
+
+% for i = 1:length(xdf_paths)
+for i = participant_range(1):participant_range(2) % for testing
+    xdf_path = [main_path, '\', xdf_paths(i).name];
+    [~, participant] = fileparts(xdf_path);
+    participant_array = [participant_array convertCharsToStrings(participant)];
     
-% Deal with NaN values
-ob_dat_x = fillmissing(ob_dat_x, "previous");
-el_dat_x = fillmissing(el_dat_x, "previous");
-
-event_struct = struct("time_stamps", ev_ts);
-event_struct.time_series = ev_dat;
-opbci_struct = struct("time_stamps", ob_time_axis, "time_series", ob_dat_x);
-elink_struct = struct("time_stamps", el_time_axis, "time_series", el_dat_x-1000);
-
-% calibration_factor_eog = linear_calibration(event_struct, opbci_struct, opbci_threshold)
-% calibration_factor_elink = linear_calibration(event_struct, elink_struct, elink_threshold)
-
-ob_features = get_features(event_struct, opbci_struct, calibration_factor_eog, "EOG", remove_outliers);
-elink_features = get_features(event_struct, elink_struct, calibration_factor_elink, "EyeLink", remove_outliers);
-% elink_features = ob_features;
-
-"Calibration factor - EOG: " + calibration_factor_eog
-% "EOG Mean Accuracies: " + num2str(ob_features.accuracy)
-% "EOG Max Accuracy: " + ob_features.max_accuracy
-"Calibration factor - Elink: " + calibration_factor_elink
-% "Elink Mean Accuracies: " + num2str(elink_features.accuracy)
-% "Elink Max Accuracy: " + elink_features.max_accuracy
-
-copy_table = [];
-errors = [];
-headers = strings([1,0]);
-points = ['A' 'B' 'C' 'D'];
-for i = 1:length(points)
-    point = points(i);
-    headers = [headers, strcat('EOG_Mag_', point), ...
-        strcat('EOG_Acc_', point), ...
-        strcat('EOG_PV_', point), ...
-        strcat('EOG_Lat_', point), ...
-        strcat('Elink_Mag_', point), ...
-        strcat('Elink_Acc_', point), ...
-        strcat('Elink_PV_', point), ...
-        strcat('Elink_Lat_', point)
-        ];
-    
-    to_append = [ob_features.all_values.(point)', ...
-        ob_features.all_accuracy.(point)', ...
-        ob_features.all_peak_vel.(point)', ...
-        ob_features.all_latency.(point)', ...
-        elink_features.all_values.(point)', ...
-        elink_features.all_accuracy.(point)', ...
-        elink_features.all_peak_vel.(point)', ...
-        elink_features.all_latency.(point)'];
-    
-    if remove_outliers
-        % Remove outliers again based on Elink, EOG difference
-        elink_col = elink_features.all_values.(point);
-        eog_col = ob_features.all_accuracy.(point);
-        diff_col = abs(elink_col-eog_col);
-        diff_iqr = iqr(diff_col);
-        iqr_filt = diff_col > mean(diff_col) + 1.5*diff_iqr;
+    [calibration_factor_eog, calibration_factor_elink, R_value, ...
+        to_copy, to_copy_removed, ...
+        to_copy_outliers_removed, to_copy_removed_outliers_removed] = run_participant(xdf_path, outlier_iqr_scale, filter);
         
-        full_rows_to_remove = [];
-        eog_rows_to_remove = [];
-        for j = 1:length(ob_features.all_values.(point))
-            if isnan(elink_col(j))
-                full_rows_to_remove = [full_rows_to_remove j];
-            elseif isnan(eog_col(j)) || iqr_filt(j)
-                eog_rows_to_remove = [eog_rows_to_remove j];
-            end
-        end     
-          
-        % Remove appropriate rows in to_append
-        for j=1:length(eog_rows_to_remove)
-            to_append(eog_rows_to_remove(j), 1:4) = NaN; % Remove EOG outliers
-        end
-        for j=1:length(full_rows_to_remove)
-            to_append(full_rows_to_remove(j), :) = NaN;
+    eog_removed_total = 0;
+    eog_total_data = 0;
+    elink_removed_total = 0;
+    elink_total_data = 0;
+    % Loop through conditions
+    for j = 1:length(conditions)
+        condition = conditions(j);
+        
+        % Keep track of averages and stds
+        % Second last row
+        average_matrices.(condition) = [average_matrices.(condition); to_copy.(condition)(end - 1, :)];
+        average_matrices_out.(condition) = [average_matrices_out.(condition); to_copy_outliers_removed.(condition)(end - 1, :)];
+        % Final row
+        std_matrices.(condition) = [std_matrices.(condition); to_copy.(condition)(end, :)];
+        std_matrices_out.(condition) = [std_matrices_out.(condition); to_copy_outliers_removed.(condition)(end, :)];
+
+        to_write = [strings(size(to_copy.(condition), 1) - 1, 1), to_copy.(condition)(2:end, :)];
+        to_write_out = [strings(size(to_copy_outliers_removed.(condition), 1) - 1, 1), ...
+            to_copy_outliers_removed.(condition)(2:end, :)];
+        to_write(1) = participant;
+        to_write(size(to_copy.(condition), 1) - 2, 1) = "Avg";
+        to_write(size(to_copy.(condition), 1) -1, 1) = "Std";
+        to_write_out(1) = participant;
+        to_write_out(size(to_copy_outliers_removed.(condition), 1) - 2, 1) = "Avg";
+        to_write_out(size(to_copy_outliers_removed.(condition), 1) -1, 1) = "Std";
+
+        total_to_write.(condition) = [total_to_write.(condition); to_write; ...
+            [["Missing"; "Removed"; "Total"] to_copy_removed.(condition)(2:end, :) ...
+            strings(3, size(to_write,2)- 1 - size(to_copy_removed.(condition),2))]; strings(1, length(to_write))];
+        total_to_write_out.(condition) = [total_to_write_out.(condition); to_write_out; ...
+            [["Missing"; "Removed"; "Total"] to_copy_removed_outliers_removed.(condition)(2:end, :) ... 
+             strings(3, size(to_write_out,2)- 1 - size(to_copy_removed_outliers_removed.(condition),2))]; strings(1, length(to_write_out))];
+        
+        eog_removed_total = eog_removed_total + nansum(double(to_copy_removed_outliers_removed.(condition)(end - 1, 1:16)));
+        eog_total_data = eog_total_data + nansum(double(to_copy_removed_outliers_removed.(condition)(end, 1:16)));
+        if ~strcmp(condition, "C4")
+            elink_removed_total= elink_removed_total + nansum(double(to_copy_removed_outliers_removed.(condition)(end - 1, 18:end)));
+            elink_total_data = elink_total_data + nansum(double(to_copy_removed_outliers_removed.(condition)(end, 18:end)));
         end
     end
+    % Calibration table
+    calibration_table(row, :) = [participant_array(end), calibration_factor_eog, eog_removed_total/eog_total_data*100, ...
+        R_value, calibration_factor_elink, elink_removed_total/elink_total_data*100];
+    row = row + 1;
+end
+
+if write_excel
+    num_participants = length(participant_array);
+    % Write averages and std's to Excel
+    averages_table = [strings(3, 2) headers];
+    averages_table_out = [strings(3, 2) headers];
     
-    for j = 1:size(to_append,2)
-        new_col = [nanmean(to_append(:,j));nanstd(to_append(:,j))];
-        errors = [errors, new_col];
+    correlation_headers = ["Mag_EOG" "Mag_EL" "Acc_EOG" "Acc_EL" "Pvel_EOG" "Pvel_EL" "Lat_EOG" "Lat_EL"];
+    observation_matrix = [];
+    observation_matrix_out = [];
+    
+    for i = 1:length(conditions)
+       condition = conditions(i);
+       
+       current_mean = mean(double(average_matrices.(condition)), 1);
+       current_averages = [[condition; strings(length(participant_array) + 3, 1)] ... 
+           [[participant_array', average_matrices.(condition)];
+            ["Avg" current_mean];
+            ["Std" vecnorm(double(std_matrices.(condition)), 2, 1)/length(participant_array)];
+            strings(2, size(average_matrices.(condition), 2) + 1)]];
+        
+        current_mean_out = mean(double(average_matrices_out.(condition)), 1);
+        current_averages_out = [[condition; strings(length(participant_array) + 3, 1)] ...
+            [[participant_array', average_matrices_out.(condition)];
+            ["Avg" current_mean_out];
+            ["Std" vecnorm(double(std_matrices_out.(condition)), 2, 1)/length(participant_array)];
+            strings(2, size(average_matrices_out.(condition), 2) + 1)]];
+        
+        if(strcmp(condition, "C4"))
+            % Take half of average matrix
+            current_averages = [current_averages strings(size(current_averages, 1), size(averages_table, 2) - size(current_averages, 2))];
+            current_averages_out = [current_averages_out strings(size(current_averages_out, 1), size(averages_table, 2) - size(current_averages_out, 2))];
+        else
+            % Observation matrix
+            for j = 1:4
+                observation_matrix = [observation_matrix; current_mean([1 18 2 19 3 20 4 21]+4*(j-1))];
+                observation_matrix_out = [observation_matrix_out; current_mean_out([1 18 2 19 3 20 4 21]+4*(j-1))];
+            end
+        end
+        
+        averages_table = [averages_table; current_averages];
+        averages_table_out = [averages_table_out; current_averages_out];
+        
+%         start_row = 4 + (i-1)*(length(participant_array) + 4);
+%         averages_table(start_row, 1) = condition;
+%         averages_table_out(start_row, 1) = condition;
+% 
+%         averages_table(start_row:start_row + length(participant_array) - 1, 2:2 + size(average_matrices.(condition), 2)) = ...
+%             [participant_array', average_matrices.(condition)];
+%         averages_table(start_row + length(participant_array), 2:2 + size(average_matrices.(condition), 2)) = ...
+%             ["Avg" mean(double(average_matrices.(condition)), 1)];
+%         averages_table(start_row + length(participant_array) + 1, 2:2 + size(std_matrices.(condition), 2)) = ...
+%             ["Std" vecnorm(double(std_matrices.(condition)), 2, 1)/length(participant_array)];
+% 
+%         averages_table_out(start_row:start_row + length(participant_array) - 1, 2:2 + size(average_matrices_out.(condition), 2)) = ...
+%             [participant_array', average_matrices_out.(condition)];
+%         averages_table_out(start_row + length(participant_array), 2:2 + size(average_matrices_out.(condition), 2)) = ...
+%             ["Avg" mean(double(average_matrices_out.(condition)), 1)];
+%         averages_table_out(start_row + length(participant_array) + 1, 2:2 + size(std_matrices_out.(condition), 2)) = ...
+%             ["Std" vecnorm(double(std_matrices_out.(condition)), 2, 1)/length(participant_array)];
     end
-    copy_table = [copy_table, to_append];
+
+    % Create correlation tables
+    [R, P] = corrcoef(observation_matrix);
+    [R_out, P_out] = corrcoef(observation_matrix_out);
+    
+    correlations_sheet = [["Correlation Coefficients" correlation_headers;
+        correlation_headers' R] strings(length(R)+1, 1) ... 
+        ["P-values" correlation_headers;
+        correlation_headers' P]];
+    correlations_sheet_out = [["Correlation Coefficients" correlation_headers;
+        correlation_headers' R_out] strings(length(R)+1, 1) ... 
+        ["P-values" correlation_headers;
+        correlation_headers' P_out]];
+    
+    
+    % Write all to excel
+    for i = 1:length(conditions)
+        condition = conditions(i);
+        xlswrite(excel_fname, total_to_write.(condition), condition, "A4");
+        xlswrite(excel_fname, total_to_write_out.(condition), condition + "_out", "A4");
+    end
+    xlswrite(excel_fname, averages_table, "Averages", "A1");
+    xlswrite(excel_fname, averages_table_out, "Averages_out", "A1");
+    xlswrite(excel_fname, correlations_sheet, "Correlations", "A1");
+    xlswrite(excel_fname, correlations_sheet_out, "Correlations_out", "A1");
+    xlswrite(excel_fname, calibration_table, "Calibration", "A1");
+
+    close all;
+
+    % Plot bar graphs
+    if save_plots
+        generateplots;
+    end
 end
 
-% Format copy_table for Excel 
-% Mag Acc PV Lat for A B C D for EOG, then Elink
-copy_table = [headers; copy_table; errors];
-eog_half = [];
-elink_half = [];
-for i = 1:size(copy_table, 2)/8
-    eog_half = [eog_half copy_table(:, (8*(i-1) + 1):(8*i-4))];
-    elink_half = [elink_half copy_table(:, (8*(i-1)+ 5):(8*i))];
-end
-empty_col = string(zeros(size(copy_table,1), 1));
-empty_col(:) = "";
-copy_table = [eog_half empty_col elink_half];
-close all;
 
-% % Bar plot of accuracies
-% figure()
-% bins = categorical({'A','B','C','D','Overall'});
-% bins = reordercats(bins,{'A','B','C','D','Overall'});
-% bars = bar(bins, [ob_features.accuracy; elink_features.accuracy]);
-% set(bars, {'DisplayName'}, {'OpenBCI','Eyelink'}')
-% ylabel("Angular Difference");
-% title("Accuracy");
-% legend();
-% hold off
-% 
-% 
-% % Bar plot of Peak Velocities
-% figure()
-% bins = categorical({'A','B','C','D','Overall'});
-% bins = reordercats(bins,{'A','B','C','D','Overall'});
-% bars = bar(bins, [ob_features.peak_vel; elink_features.peak_vel]);
-% set(bars, {'DisplayName'}, {'OpenBCI','Eyelink'}')
-% ylabel("Peak Velocity (degrees/s)");
-% title("Peak Velocity");
-% legend();
-% hold off
-% 
-% % Bar plot of latencies
-% figure()
-% bins = categorical({'A','B','C','D','Overall'});
-% bins = reordercats(bins,{'A','B','C','D','Overall'});
-% bars = bar(bins, [ob_features.latency*1000; elink_features.latency*1000]);
-% set(bars, {'DisplayName'}, {'OpenBCI','Eyelink'}')
-% ylabel("Latency (ms)");
-% title("Latency");
-% legend();
-% hold off
-% 
