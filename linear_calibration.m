@@ -35,7 +35,7 @@ for i = 1:length(points)
     point = points{i};
     
     % Loop through each row of times [start ping stop]
-    for row = 1:size(times.(point), 1)
+    for row = 1:numCalTrial
         start = times.(point)(row, 1);
         ping = times.(point)(row, 2);
         stop = times.(point)(row, 3);

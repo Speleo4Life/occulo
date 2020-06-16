@@ -129,13 +129,13 @@ for II = 1:numel(xdf_fname)
     event_struct = struct("time_stamps", ev_ts);
     event_struct.time_series = ev_dat;
     opbci_struct = struct("time_stamps", ob_time_axis, "time_series", ob_dat_x);
-    elink_struct = struct("time_stamps", el_time_axis, "time_series", el_dat_x-980);
+    elink_struct = struct("time_stamps", el_time_axis, "time_series", el_dat_x-960);
     
     if contains(xdf_fname{II}, 'C1')
         calibration_factor_eog = linear_calibration(event_struct,...
-            opbci_struct, opbci_threshold, false);
+            opbci_struct, opbci_threshold, true);
         calibration_factor_elink = linear_calibration(event_struct,...
-            elink_struct, elink_threshold, false);
+            elink_struct, elink_threshold, true);
     end
     
     ob_features = get_features(event_struct, opbci_struct,...

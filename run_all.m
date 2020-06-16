@@ -1,6 +1,6 @@
 
 
-[xdf_fname, xdf_path] = uigetfile('*.xdf', 'Select a File','MultiSelect','on')
+[xdf_fname, xdf_path] = uigetfile('*.xdf', 'Select a File','MultiSelect','on');
 
 
 % Handle the case of a single selection which imports as a character vector
