@@ -1,4 +1,4 @@
-% function VarNamesOut = VarMaker(condLabel, triaLabel, loopTrial,
+% function VarNamesOut = varmaker2(condLabel, triaLabel, loopTrial,
 % numTrialRep, lab3, sortcorL3, lab4)
 % condLabel <STR> A string array containing the condition/group labels
 % triaLabel <STR> A string array containing the trial labels
@@ -11,7 +11,7 @@
 % srtcorL3 <CHR> A character vector, 'true' OR 'false', to indicate if
 %                sort correction is required for label3. 
 % lab4 <STR> A single string acting as an optional universal tag
-% Example: VarNamesOut = varmaker(["C1", "C2", "C3"],["A", "B", "C", "D"],... 
+% Example: VarNamesOut = varmaker2(["C1", "C2", "C3"],["A", "B", "C", "D"],... 
 %               'true', 2, ["ST", "EN"], "IDX") 
 %
 % Useage Notes: This was made as a semi-dynamic function though there is
@@ -25,7 +25,7 @@
 % UBC, Department of Psychology, Vision Lab   
 % Email: raymond.macneil@mail.utoronto.ca
 % Test 
-function VarNamesOut = varmaker(condLabel, triaLabel, sortcorLT, loopTrial,...
+function VarNamesOut = varmaker2(condLabel, triaLabel, sortcorLT, loopTrial,...
     numTrialRep, lab3, sortcorL3, lab4)
 
 %% Exception Handling and Input Error
