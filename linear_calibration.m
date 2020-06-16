@@ -1,5 +1,5 @@
 function [calibration_factor] = linear_calibration(event_struct,...
-    data_struct, threshold, plots) 
+    data_struct, threshold, plots, extra_calib_trials) 
 
 % event_struct: struct containing time_series (labels) and time_stamps (times)
 % data_struct: Same as above, for EOG/Elink data
@@ -11,16 +11,38 @@ calibration_angles = [-22 -11 11 22];
 times = struct('A', [], 'B', [], 'C', [], 'D', []);
 points = fieldnames(times);
 numEvt2Find = 3; % Per trial: Start, Ping, Stop
-numCalTrial = 5; % Per point/marker
+numCalTrial = 8; % Per point/marker
  
 % Get start and stop times
 % Extract [start ping end] indices from time series event labels and use
 % these to assign the relevant timestamp values to the times struct
-for ii = 1:numel(points)
-    exp = strcat('t\d*_calib_H_', points{ii});
-    idxHzCal = ~cellfun('isempty', regexp(event_struct.time_series, exp)); 
-    times.(points{ii}) = reshape(event_struct.time_stamps(idxHzCal),numEvt2Find,...
-        nnz(idxHzCal)/numEvt2Find)';
+if ~isempty(extra_calib_trials)
+    for ii = 1:numel(points)
+        exp = strcat('t\d*_calib_H_', points{ii});
+        idxHzCal = ~cellfun('isempty', regexp(event_struct.time_series, exp));
+        
+        % Find trial (not calib) indices for ranom calib trials
+        r_exp = strcat('t\d*_exp_', points{ii}); % all trials for given ltr
+        r_exp_inds = regexp(event_struct.time_series, r_exp);
+        % Get all 10 trials of given letter 
+        rand_Hz_trials = find(~cellfun('isempty', r_exp_inds));
+        % Get 3 indices (st, ping, stp) for each calib_trials index (of 10)
+        extra_calib_trials_idx = sort([(extra_calib_trials-1)*3 + 1 ...
+                                       ((extra_calib_trials-1)*3)+ 2 ...
+                                       ((extra_calib_trials-1)*3)+ 3]);
+        % Add these three trials to index list of calibration trials
+        idxHzCal(rand_Hz_trials(extra_calib_trials_idx)) = true;
+        
+        times.(points{ii}) = reshape(event_struct.time_stamps(idxHzCal),numEvt2Find,...
+            nnz(idxHzCal)/numEvt2Find)';
+    end
+else  
+    for ii = 1:numel(points)
+        exp = strcat('t\d*_calib_H_', points{ii});
+        idxHzCal = ~cellfun('isempty', regexp(event_struct.time_series, exp)); 
+        times.(points{ii}) = reshape(event_struct.time_stamps(idxHzCal),numEvt2Find,...
+            nnz(idxHzCal)/numEvt2Find)';
+    end
 end
 
 % Values of each saccade
@@ -35,7 +57,7 @@ for i = 1:length(points)
     point = points{i};
     
     % Loop through each row of times [start ping stop]
-    for row = 1:numCalTrial
+    for row = 1:size(times.(point), 1)
         start = times.(point)(row, 1);
         ping = times.(point)(row, 2);
         stop = times.(point)(row, 3);
