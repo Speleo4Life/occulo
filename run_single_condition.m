@@ -5,6 +5,7 @@ function [copy_table, copy_removed_table,...
 
 AnalyzeXDF_oct2019(xdf_fname, xdf_path);
 
+remove_blinks = evalin('base','remove_blinks');
 opbci_threshold = evalin('base','opbci_threshold');
 elink_threshold = evalin('base','elink_threshold');
 Q = evalin('base', 'Q');
@@ -25,6 +26,11 @@ end
 ob_dat_x = fillmissing(ob_dat_x, "previous");
 el_dat_x = fillmissing(el_dat_x, "previous");
 
+if remove_blinks & ~strcmp(condition, "C4")
+    ob_dat_x = flatten_blinks(ob_dat_x, ob_time_axis, ev_ts(1), xdf_fname);
+    el_dat_x = flatten_blinks(el_dat_x, el_time_axis, ev_ts(1), xdf_fname);
+end
+
 event_struct = struct("time_stamps", ev_ts);
 event_struct.time_series = ev_dat;
 opbci_struct = struct("time_stamps", ob_time_axis, "time_series", ob_dat_x);
@@ -39,7 +45,7 @@ else
     % If C1, recalculate and assign correct R, linear calibration values
     R_value = find_R(event_struct, opbci_struct, opbci_threshold, iqr_scale);
     opbci_struct = struct("time_stamps", ob_time_axis, "time_series", filter(R_value, Q, opbci_struct, false, event_struct));
-
+   
     calibration_factor_eog = linear_calibration(event_struct, opbci_struct, opbci_threshold, iqr_scale);
     calibration_factor_elink = linear_calibration(event_struct, elink_struct, elink_threshold, iqr_scale);
 end
@@ -53,6 +59,12 @@ if ~strcmp(condition, "C4")
 else
     elink_features = ob_features;
     elink_features_no_outliers = ob_features_no_outliers;
+end
+
+save_csv = evalin('base','save_csv');
+if save_csv
+    csv_name = [xdf_fname(1:end-4) '_' num2str(calibration_factor_elink) '.csv'];
+    writematrix([string(func2str(filter)) calibration_factor_eog opbci_struct.time_series], csv_name, 'WriteMode','append');
 end
 
 copy_table = [];

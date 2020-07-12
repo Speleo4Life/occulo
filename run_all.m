@@ -1,23 +1,31 @@
 clear;
 addpath('Filters','-end');
 
+%-------------------------------
 % Parameters
-opbci_threshold = [-inf inf]; % Threshold for filtering EOG saccade
+opbci_threshold = [-inf inf]; % Threshold for filtering saccade
 elink_threshold = [-inf inf];
 outlier_iqr_scale = 1.5;
-filter_types = {@(~, ~, x, ~, ~)bandpass(x.time_series,[0.6,35],250) @KFBrownian @KFConstVel @ConstAcc ... 
+
+% Blinks
+remove_blinks = true;
+
+% For WH filter Q = 0.0005
+% LR filter Q = 0.000005
+% Else Q = 0.012
+filter_types = {@Bandpass @KFBrownian @KFConstVel @ConstAcc ... 
     @KFWesthInputAll, @LinearRecipoAll};
 filter = filter_types{6};
-% For WH filter Q = 0.6
-% LR filter Q = 0.1
-% Else Q = 0.012
-Q = 0.1;
+Q = 0.000005;
 
-excel_fname = "LR_0.1.xlsx";
-plot_folder_name = "Plots_LR_0.1";
-participant_range = [10 11];
+excel_fname = "LR.xlsx";
+plot_folder_name = "Plots_LR";
 write_excel = false;
 save_plots = false;
+save_csv = false;
+
+participant_range = [1, 1];
+%-------------------------------
 
 main_path = uigetdir;
 xdf_paths = dir(main_path);
@@ -65,8 +73,8 @@ calibration_table(2, :) = ["Participant", "C. factor", "Outlier %", "R", "C. fac
 
 row = 3;
 
-% for i = 1:length(xdf_paths)
-for i = participant_range(1):participant_range(2) % for testing
+for i = 1:length(xdf_paths)
+% for i = participant_range(1):participant_range(2) % for testing
     xdf_path = [main_path, '\', xdf_paths(i).name];
     [~, participant] = fileparts(xdf_path);
     participant_array = [participant_array convertCharsToStrings(participant)];
@@ -121,6 +129,7 @@ for i = participant_range(1):participant_range(2) % for testing
     row = row + 1;
 end
 
+close all;
 if write_excel
     num_participants = length(participant_array);
     % Write averages and std's to Excel
@@ -207,8 +216,6 @@ if write_excel
     xlswrite(excel_fname, correlations_sheet, "Correlations", "A1");
     xlswrite(excel_fname, correlations_sheet_out, "Correlations_out", "A1");
     xlswrite(excel_fname, calibration_table, "Calibration", "A1");
-
-    close all;
 
     % Plot bar graphs
     if save_plots
