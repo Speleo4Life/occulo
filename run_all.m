@@ -8,25 +8,24 @@ elink_threshold = [-inf inf];
 outlier_iqr_scale = 1.5;
 
 % Blinks
-remove_blinks = true;
+remove_blinks = false;
 
 % For WH filter Q = 0.0005
 % LR filter Q = 0.000005
 % Else Q = 0.012
-filter_types = {@Bandpass @KFBrownian @KFConstVel @ConstAcc ... 
-    @KFWesthInputAll, @LinearRecipoAll};
-filter = filter_types{6};
+filter_types = {@Bandpass};
+filter = filter_types{1};
 Q = 0.000005;
 
-excel_fname = "LR.xlsx";
-plot_folder_name = "Plots_LR";
-write_excel = false;
-save_plots = false;
+excel_fname = "test.xlsx";
+plot_folder_name = "test";
+write_excel = true;
+save_plots = true;
 save_csv = false;
 
-participant_range = [1, 1];
+run_all_participants = false;
+participants_to_run = ["P19", "P23"];
 %-------------------------------
-
 main_path = uigetdir;
 xdf_paths = dir(main_path);
 xdf_paths = xdf_paths([xdf_paths(:).isdir]);
@@ -74,9 +73,13 @@ calibration_table(2, :) = ["Participant", "C. factor", "Outlier %", "R", "C. fac
 row = 3;
 
 for i = 1:length(xdf_paths)
-% for i = participant_range(1):participant_range(2) % for testing
     xdf_path = [main_path, '\', xdf_paths(i).name];
     [~, participant] = fileparts(xdf_path);
+    
+    if ~run_all_participants && ~ismember(participant, participants_to_run)
+        continue;
+    end
+    
     participant_array = [participant_array convertCharsToStrings(participant)];
     
     [calibration_factor_eog, calibration_factor_elink, R_value, ...

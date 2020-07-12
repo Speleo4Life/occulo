@@ -1,5 +1,9 @@
 function plotbars(data, FolderName)
-
+% Create Plots folder
+if ~exist(FolderName, 'dir');
+   mkdir(FolderName);
+end
+    
 %%% With outliers 
 
 % Magnitude 
