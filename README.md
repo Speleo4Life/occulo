@@ -43,8 +43,7 @@ remove_blinks = false;
 % For WH filter Q = 0.0005
 % LR filter Q = 0.000005
 % Else Q = 0.012
-filter_types = {@Bandpass @KFBrownian @KFConstVel @ConstAcc ... 
-    @KFWesthInputAll, @LinearRecipoAll};
+filter_types = {@Bandpass, @KFWesthInputAll, @LinearRecipoAll};
 filter = filter_types{1};
 Q = 0.000005;
 
@@ -61,8 +60,8 @@ participants_to_run = ["P19", "P23"];
 * **opbci_threshold/elink_threshold**: saccade values beyond this range are filtered out. No threshold values for now.
 * **outlier_iqr_scale**: For identifying outliers outside [value*interquartile range]. Default is 1.5.
 * **remove_blinks**: Flatten blinks in signal. Leave at false.
-* **filter**: Only Bandpass is available for now.
-* **Q**: Only relevant with other filters. Ignore for now.
+* **filter**: Bandpass, LinearReciprocal and Westheimer.
+* **Q**: Model noise for filter. Suggested values in comments.
 * **excel_fname, plot_folder_name**: Names of Excel and Plot folder names if data is saved. Plot folder will automatically be created if it does not exist.
 * **write_excel/save_plots**: Save Excel file and/or plots. Plots are saved in the specified folder.
 * **save_csv**: Used when plotting single saccades.

@@ -13,7 +13,7 @@ remove_blinks = false;
 % For WH filter Q = 0.0005
 % LR filter Q = 0.000005
 % Else Q = 0.012
-filter_types = {@Bandpass};
+filter_types = {@Bandpass @KFWesthInputAll, @LinearRecipoAll};
 filter = filter_types{1};
 Q = 0.000005;
 
