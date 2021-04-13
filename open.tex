@@ -1,0 +1,619 @@
+\documentclass[transmag]{IEEEtran}
+\usepackage{latexsym}
+\usepackage{graphicx}
+\usepackage{amsfonts,amssymb,amsmath}
+\usepackage{hyperref}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\markboth{$>$ REPLACE THIS LINE WITH YOUR PAPER IDENTIFICATION NUMBER $<$}
+{$>$ REPLACE THIS LINE WITH YOUR PAPER IDENTIFICATION NUMBER $<$}
+
+
+\usepackage{siunitx}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{adjustbox}
+\usepackage[table]{xcolor}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{soul}
+\usepackage{multicol,lipsum,environ}
+\usepackage{cellspace}
+\usepackage{rotating}
+\usepackage{tikz}
+
+
+\makeatletter
+\def\endthebibliography{%
+	\def\@noitemerr{\@latex@warning{Empty `thebibliography' environment}}%
+	\endlist
+}
+
+
+\begin{document}
+
+\title{ A Fusion Algorithm Based on Corneal-retinal Potential Model for Enhanced Saccadic Eye Movement Measurement with EOG }
+
+\author{P.D.S.H. Gunawardane, R. R. MacNeil, L. Zhao, J. T. Enns, C. W. de Silva, and M. Chiao
+	\thanks{P.D.S. Hiroshan Gunawardane and Leo Zhao are with the Microelectromechanical Systems Laboratory and the Industrial Automation Laboratory, Department of Mechanical Engineering, The University of British Columbia, Vancouver, Canada. (hiroshan@mail.ubc.ca/pdgun@ou.ac.lk,leozhao1@hotmail.com ).}
+	\thanks{ R.R. MacNeil and J. T. Enns are with the Vision Lab, Department of Psychology, The University of British Columbia, Vancouver, Canada.(rm165@mail.ubc.ca, jenns@psych.ubc.ca).   }
+	\thanks{ Clarence W. de Silva is with the Industrial Automation Laboratory, Department of Mechanical Engineering, The University of British Columbia, Vancouver, Canada (desilva@mech.ubc.ca). }
+	\thanks{Mu Chiao is with the Microelectromechanical Systems Laboratory, Department of Mechanical Engineering, The University of British Columbia, Vancouver, Canada (muchiao@mech.ubc.ca).}}
+
+%https://www.ieee-ras.org/publications/ram/special-issues/special-issue-on-design-optimization-of-soft-robots
+
+\IEEEtitleabstractindextext{\begin{abstract}
+		
+Ocular motion sensing using electrooculography (EOG) has been widely employed to measure different eye movements for diagnosing medical disorders. EOG is a body-worn sensor that has several unique capabilities when compared with external sensors such as camera-based systems. EOG can be used to sense eye movements in dark and closed-eye conditions.  However, EOG signals can be heavily contaminated with electroencephalography (brain signals), electromyography (extraocular muscle and face muscles), eyelid movements, skin drift, skin resistance, and other noise and artifacts. Traditional filtering approaches are unable to significantly improve EOG signals due to the frequency overlap between information (e.g., saccades, smooth pursuit movements), noise, and artifacts. The present paper develops a methodology using a constant velocity model (where the rate of change of the corneal-retinal potential of a saccade is assumed constant) and compares against traditional filtering techniques such as band-passfiltering, Brownian model-based Kalman filter, and acceleration model-based Kalman filter. The saccades from the EOG signals are isolated using the event markers and are compared against the  EyeLink 1000 tracker recordings. It is shown that the proposed method is able to improve the saccade recordings in raw EOG signals by about 29\% (with refernce to physical saccade) and 23\% (with refrence to EyeLink 1000 camera-based eye tracker) with respect to state-of-the-art bandpass filtering method.
+
+
+
+\end{abstract}
+	
+\begin{IEEEkeywords}
+	 Electroculography, Saccades, Kalman filter, Oculomotion sensing, Biosignal filtering, Corneal-retinal potential  
+\end{IEEEkeywords}
+	
+}
+
+\maketitle
+
+\section{INTRODUCTION}
+
+
+\begin{figure}
+	\centerline{\includegraphics[scale=2.5]{Fig1}}
+	\caption{External sensors and body-worn sensors. Top: external sensors with either an infrared transmitter/receiver mechanism or a camera system. Reflection in the cornea, and image processing are primarily used. Bottom: Body-worn sensors are placed closer to the signal source (e.g., placed on the skin) and are physically connected to the body. Electrooculography directly measures the corneal-retinal potential.}
+	\label{fig1}
+\end{figure} 
+
+
+Ocular motion sensing has been widely used in medical and engineering applications \cite{ref23},\cite{ref30},\cite{ref29},\cite{ref32}. Various types of eye movements such as saccades, vestibular ocular reflexes, vengeance, and smooth pursuit movements have been measured \cite{ref1}, \cite{ref25}. Ocular motion-sensing devices can be broadly categorized as body-worn and external sensor systems (see Fig. \ref{fig1}) \cite{ref2}. Body-worn sensors with electrooculography (EOG) electrodes measure the direct bio-signals generated due to ocular motion (e.g., cornea-retinal potential). External systems usually have either a transmitter and receiver unit or a camera system. They primarily track the eye movement by measuring its relative distance, based on the reflection (intensity or reflective angle). Usually, high-speed video cameras and reflected light (e.g., infrared) have been used in external sensor systems. Video-oculography (VOG) and infrared oculography (IROG) are the main examples of external sensor systems.
+
+The advancement of data acquisition, optics, and infrared-based technologies have enable the realization of enhanced and optimized measurement accuracy and precision of the eye-tracking devices. Commercially available external sensor systems such as EyeLink 1000 eye tracker (EL) are able to measure eye movements at a sampling frequency of 2000 \si{\hertz} with an accuracy level of 0.001 degrees \cite{ref3}. Even though these sensor systems are superior in signal acquisition technique, mainly with respect to temporal resolution and spatial resolution, they have many disadvantages. For example, the external sensor systems are heavy, expensive, require better or controlled illumination conditions, incapable of measuring closed-eye movements, and may distract the observation during measurement. EOG is an inferior technique, concerning temporal and spatial resolutions. Compared to external systems, EOG is frequently used to monitor eye movements in various applications because it can measure closed eye movements. Sleep disorder monitoring is such main applications that requires closed-eye movement sensing \cite{ref23}.
+
+A saccade is defined as the movement of the eye gaze from one fixation to another without considering the background \cite{ref33}. A typical raw EOG signal has saccadic information with artifacts and noise. The extraction of information (e.g., saccades) and features (e.g., saccade amplitude, velocity, and latency \cite{ref33}) from an EOG record  is a tedious task \cite{ref4} \cite{ref5}. A typical EOG signal contains signal artifacts such as electroencephalography (EEG), electromyography (EMG), eyelid movements, blinks, and noise \cite{ref27}. The information, and noise and artifacts in the signal are overlapped, and therefore, traditional filtering techniques may remove the information during the filtering process. Finite impulse response (FIR) filters \cite{ref27}, wavelet techniques \cite{ref6} \cite{ref8}, morphological techniques (dilation and erosion) \cite{ref9}, time series motifs techniques (dynamic time wrapping (DTW)) \cite{ref10}, and Kalman filter (KF) (Brownian motion model-based and constant acceleration model) have been used as EOG filters. Brownian model-based techniques have shown significant improvement over traditional filtering techniques \cite{ref5}. The Brownian model is focused on the randomness of the signal and noise. This approach is not known to emphasize the contaminated saccadic eye information. The same concept has been used in \cite{ref7} with an acceleration model without reporting a significant improvement. \hl{However, according to the results shown in {\cite{ref7}}, time domain approaches have shown a higher noise filtering capability than frequency domain approaches. As an alternative, {\cite{ref31}} has developed a model-based linear KF approach to process EOG signals. This technique is based on lumped-parameter-based human eye models and the presented approach could not run standalone as it is depending on it's input signal.} 
+
+In this backdrop, the present paper investigates an alternative model-based technique to improve \hl{real-time signal filtering of KFs} when used to measure saccadic eye movements in EOG. The paper introduces a constant velocity-based model and explores an improved non-complex intuitive model that is suitable for KF-based sensor fusion in saccadic eye movement sensing. The paper is organized as follows. Section \ref{section2} presents relevant eye-tracking literature and state of the art technologies. Section \ref{section3} elaborates on the developed mathematical models that are used in the proposed fusion algorithm. Section \ref{section4} presents the experimentation setup that is used in the current work, and reports the measuring mechanism of the horizontal saccadic eye movements. Sections \ref{section5} and \ref{section6} present the results of the work, characterization of them, and the conclusions that are drawn. 
+
+\section{Literature Review}
+\label{section2}
+
+\subsection{EOG}
+Electrooculography (EOG) measures the cornea-retinal potential of an eyeball.  This potential is linear with respect to angular displacements for horizontal movements between -35 to 35 degrees, and -10 to 10 degrees for vertical movements \cite{ref11}. The amplitude of an EOG signal varies from 50 - 3500 \si{\micro\volt} (for both horizontal and vertical gaze movements) in a frequency range of 1–100 \si{\hertz} \cite{ref12}. The sensitivity of voltage changes in the horizontal and vertical movements (saccade) are 16 \si{\micro\volt} per degree and 14 \si{\micro\volt} per degree, respectively \cite{ref12}.
+
+Effective noise models \cite{ref24} are important in the design of adaptive filters. The noise models for EOG signals can be tailored from other biosignals and systems (e.g., EMG). A variance distribution model for surface EMG signals based on the inverse gamma distribution has been introduced in \cite{ref13}. There, the EMG signals are handled based on a Gaussian white noise process with zero mean. Also, the signal variance is considered as a random variable that follows an inverse gamma distribution. That model has been able to successfully represent the variance distribution of artificial and real EMG data. Therefore, similar approaches can be used to develop a signal processing technique for EOG data. Modeling and analysis of the noise in biomedical systems have been further discussed in \cite{ref14}. That paper specifically studied the noise associated with EOG. The analyzed EOG signals were measured under non-illuminated conditions while attempting to fixate the gaze. The presented technique had modeled the noise signal as an output of a stochastic process and the input as a white random sequence. Then an autoregressive model that is equivalent to impulse response function was fitted. However, the model is non-parametric, and therefore, it does not require prior information about the model order. The present paper uses an additive white noise model in the developed filtering technique, as described in Section \ref{section3}. 
+
+\subsection{Kalman Filter}
+
+Kalman Filters (KFs) have been used in various applications, to filter and improve biosignals \cite{ref34},\cite{ref35},\cite{ref35}. The main shortcomings of traditional bio-signal processing techniques are discussed in \cite{ref15}. They proposed KF-based signal processing to enhance the quality and the accuracy of the measured bio-signals. In later work,a KF has been used to model the control movements of the central nervous system \cite{ref16}. That paper presented the use of KF to study the time delay between motor commands and sensory feedback. The technique presented in that paper has used a realistic model to estimate the current state of the motor system, and has used KF-updated commands to improve the time delay between motor commands and sensory feedback. KFs are frequently used for noise reduction and signal improvement of inertial measurement unit (IMU) signals in biomedical applications \cite{ref17} \cite{ref18}. These papers have recently investigated the use of the extended Kalman filter (eKF) to overcome nonlinearity, numerical drift, unstable measurements, and alignment issues of IMU-based knee angle measurements. The approach presented in \cite{ref17} has been able to improve the quality of knee angle records, with an average root-mean square (RMS) error of less than 2 degrees.  The work in, \cite{ref18}, has used an IMU-based eKF for hand motion measurement using a similar approach. However, that paper has mainly focused on the improvement of accuracy. Therefore, the mention work has significantly influenced the interest in using model-based filters to correct distortions in biosignals.
+
+The use of a general linear KF to accurately estimate time-varying directed connectivity has been investigated in \cite{ref19}. That work has tested an adaptive algorithm based on a KF to model dynamic and directed Granger casual interactions between neurophysiological signals that are simultaneously measured from multiple cortical regions. The work presented in \cite{ref20} has investigated the use of the KF to find onsets of worsening progression from multiple physiological parameters, which have predictive values in decompensation events. That paper has used the KF in noise reduction in the feature extraction process. 
+
+Several groups have investigated the use of KF to filter EOG signals. In \cite{ref7}, a constant acceleration model has been tested. This technique has reduced the noise (the recorded SNR was 30.16 \si{\decibel}) over their approach of band-pass FIR. However, our experimentation has found that the constant accelerate approach cannot reduce the signal distortion.  Another approach has been investigated using a battery model (Coulomb's law is used to model corneal-retinal potential) and the eKF \cite{ref26}. However, this approach is rather complex to implement and would require a tedious parametric estimation prior to the application. 
+
+
+The use of KF in biosignal filtering helps to improve the signal quality by reducing the noise. However, the use of correct model is helpful to adequately restore the signal features (i.e., distorted saccades). In previous work (\cite{ref4}, \cite{ref5}), techniques have been implemented using the FIR filters and the Brownian model to filter EOG signals. However, the Brownian model weakly represents the behavior of $E_e (t)$, which is the corneal retinal potential of the eyeball. Therefore, the present paper further improves the techniques presented in the literature using a constant velocity model. Also, the present work investigates the best corneal-retinal potential model by using controlled experiments and using them to compare the new algorithm against Band-pass FIR, Brownian, and constant acceleration model-based KF approaches \cite{ref4}, \cite{ref5}, \cite{ref7}. 
+
+\section{Mathematical Model}
+\label{section3}
+
+First, different models for the model-based KF filtration technique are presented to accurately extract saccadic eye movements from EOG signals. The Brownian model \cite{ref5}, newly introduced constant velocity model ($\frac{dE_e}{dt}$ is a constant), and the constant acceleration model \cite{ref7}  (where,$\frac{d^2E_e}{dt^2}$ is a constant) are implemented as corneal-retinal potential models. These models are used for data fusion in the KF algorithm that is developed in the present paper.
+
+\subsection{Saccadic Eye Movements and EOG Signal}
+
+A raw EOG signal has a combination of the corneal retinal potential of the eyeball, noise, and artifacts. The induced voltage in the EOG electrode $E(t)$ can be represented as, 
+
+\begin{equation}
+E(t) = E_e(t)+\varphi+\Omega
+\end{equation}
+
+where, $E_e(t)$ = corneal-retinal potential,  $\varphi$ =  artifacts (eye muscles, eyelids, blinks, etc.), and $\Omega$ =  noise (electro-mechanical noise). However, $E_e(t)$ is linearly proportional to the rotation of the eyeball. Therefore, 
+
+\begin{equation}
+E_e(t) = K\theta_{axis}(t)
+\end{equation}
+
+where, $\theta_{axis}(t)$ is the angular displacement around the eyeball axis parallel to the location of the electrode, and $K$ is the calibration factor. 
+
+\begin{figure}
+	\centerline{\includegraphics[scale=0.44]{fig2.jpg}}
+	\caption{Noise model for a raw EOG signal. $u(t)$: input to the deterministic systems [visual cue], $u^{\star} (t)$: trigger signal for the artifacts, $E_e (t)$: output of the deterministic signal [corneal-retinal potential], $e(t)$: white noise signal to the stochastic system, $\Omega$: additive noise signal, $E(t)$:raw EOG signal. }
+	\label{fig2}
+\end{figure} 
+
+\subsection{Noise Model}
+The noise in EOG can be modeled as shown in Fig. \ref{fig2}. $U(t)$ is the input to the deterministic plant (visual cues to initiate the saccades), which will generate an output $E_e(t)$. A noise signal $e(t)$ enters the stochastic process and generates the additive noise $\Omega$ to the signal. $U^\star(t)$ triggers the artifacts $\varphi$ in the system (e.g., blinks). The final measurement that reaches the electrode, $E(t)$, is a combination of all these factors and artifacts. The identification of the deterministic system is important to minimize the negative effects of the stochastic system. Moreover, various corneal-retinal potential models can be experimented with this technique (see Section \ref{3C}). The present paper considers the Gaussian noise model and three different saccadic models as deterministic systems. The paper evaluates the Brownian, constant velocity, and constant acceleration models, to determine the most suitable one to represent the deterministic system, to estimate $E_e(t)$. The paper assumes $\varphi + \Omega \approx \Omega$.
+
+
+\subsection{Corneal-retinal Potential Models for Saccades}
+\label{3C}
+
+The sensor fusion proposed in the present paper is based on the KF, which uses linear quadratic estimation to filter a series of measurements recorded over time. Uncertainty of the process and in the measured values is treated as noise. This noise is modeled using a probability-based technique. The process is modeled in the discretized form as,  
+
+\begin{equation}
+E_{e\_k} = AE_{e\_(k-1)} + BU_k + \Omega_k
+\end{equation}
+
+
+Here, $E_{e\_k}$ represents the discretized states of the system, (it can be a 3x1 column vector, where $s_k$, $v_k$, $a_k$ are the bio signal, its rate of change, and the $2^{nd}$ rate of change, respectively) for the $k^{th}$ sample,  $\Omega_k$ is the process noise, which is assumed as additive Gaussian white noise with the covariance matrix $Q$, and $\Omega_k \sim N(0,Q)$. Furthermore, A is the state transition matrix, which represents the dynamics of the system (state transition relation). This matrix depends on the time-domain process model of the system (the present paper uses three saccadic eye models, Brownian, constant velocity, and constant acceleration). In the process model, $B$ (input gain matrix) is neglected because the present work is a “free” model, without input $U_k$. The measurement (EOG) is $E_{e\_k}$, where the measurement noise is assumed as additive white Gaussian noise with covariance matrix $R$, $\epsilon_k \sim N(0,R)$.  This assumption is made as there is no correlation between $\Omega_k$ and $\epsilon_k$. The output model is represented as, 
+
+\begin{equation}
+E_k = HE_{e\_k} + \epsilon_k 
+\end{equation}
+
+where, $H$ is the measurement matrix. The Brownian, constant velocity, and constant acceleration models are used to represent $E_e(t)$ (discrete $E_{e\_k}$). These three models are outlined now.
+
+\subsubsection{Brownian Motion}
+
+In the Brownian motion model, the Brownian motion is considered to be what the EOG signal follows \cite{ref5}. The state space representation of the associated process model, in the discrete form, may be written as, 
+
+\begin{equation}
+E_{e\_(k+1)} = AE_{e\_k} + Noise 
+\end{equation}
+where,  $A$ =  system matrix, which is an identity matrix, in the present work.
+
+\begin{figure*}[h]
+	\centerline{\includegraphics[scale=0.65]{fig3}}
+	\caption{The schematic diagram of the model-based fusion algorithm. The saccades are initiated by visual cues leading to estimation and measurement. The estimation is based on Brownian, constant velocity or acceleration models. The Kalman filter is used to fuse the estimation with the measurement to generate the final output. }
+	\label{fig3}
+\end{figure*}
+
+
+\subsubsection{Constant Velocity Model}
+
+The constant velocity model considers $\frac{dE_e}{dt}$, the rate of change of the differential potential, to be a constant. The state space representation of the corresponding process model, in the discrete form, may be written as, 
+
+\begin{equation}
+E_{e\_(k+1)} = AE_{e\_k} + K\dot{E}_{e\_k}
+\end{equation}
+
+\begin{equation}
+\dot{E}_{e\_(k+1)} = \dot{E}_{e\_k}
+\end{equation}
+
+Therefore, the state space form of the model is, 
+
+\begin{equation}
+ \begin{bmatrix} E_{e\_(k+1)} \\ \dot{E}_{e\_(k+1)} \end{bmatrix}  =  \begin{bmatrix} 1 & k \\ 0 & 1 \end{bmatrix} \begin{bmatrix} E_{e\_(k)} \\ \dot{E}_{e\_(k)} \end{bmatrix} + Noise
+\end{equation}
+
+
+
+
+\subsubsection{Constant Acceleration Model}
+
+The constant acceleration model considers ($\frac{d^2E_e}{dt^2}$ ),  the $2^{nd}$ rate of change of the differential potential, to be a constant \cite{ref7}. The state space representation of the corresponding process model, in the discrete form, may be written as, 
+
+
+\begin{equation}
+E_{e\_(k+1)} = E_{e\_k} + k\dot{E}_{e\_k} + \frac{1}{2}k^2\ddot{E}_{e\_k} 
+\end{equation}
+
+\begin{equation}
+\dot{E}_{e\_(k+1)} = \dot{E}_{e\_k} + k\ddot{E}_{e\_k} 
+\end{equation}
+
+\begin{equation}
+\dddot{E}_{e\_(k+1)} = \ddot{E}_{e\_k} 
+\end{equation}
+
+Therefore, the state space form of the model is, 
+
+\begin{equation}
+\begin{bmatrix} E_{e\_(k+1)} \\ \ddot{E}_{e\_(k+1)} \\ \dddot{E}_{e\_(k+1)} \end{bmatrix}  =  \begin{bmatrix} 1  & k  & \frac{1}{2}k^2 \\ 0 & 1 & k \\ 0 & 0 & 1\end{bmatrix} \begin{bmatrix} E_{e\_(k)} \\ \ddot{E}_{e\_(k)} \\ \ddot{E}_{e\_(k)} \end{bmatrix} + Noise
+\end{equation}
+
+
+
+
+\subsection{Kalman Filter Model}
+The state estimation uses the following state estimation scheme of prediction and correction. 
+
+Prediction: 
+
+\begin{center}
+	$\hat{E}^{-}_{e\_k} = \hat{E}^{-}_{e\_(k-1)}+ BU_k+R$\\
+	$P^{-}_k = A P^{-}_{k-1}A^T+Q$
+	
+\end{center}
+
+
+Correction: 
+
+\begin{center}
+	$K_k = P^{-}_kH^T(HP^{-}_kH^T+R)^{-1}$\\
+	$P_k = (I-K_kH)P^{-}_k$ \\
+	$\hat{E}_{e\_k} = \hat{E}^{-}_k + K_k(Z_k-H\hat{E}^{-}_{e\_k})$ \\
+	
+\end{center}
+
+\begin{flushleft}
+	
+	where $\hat{E}_{e\_k}$ = estimate,  $P_k$ = covariance and $ K_k$= Kalman gain.
+\end{flushleft}
+
+
+\subsection{Band-pass Filtering}
+The band-pass filters (BP) used in the present work are described in \cite{ref4}. The FIR process uses a band-pass filter (of bandwidth 0.5 to 35 \si{\hertz}),a drift removal,a notch filter (at 60 \si{\hertz}), and a Savizky Golay filter ($5^{th}$ order, frame length 111).  
+
+
+\section{Methodology}
+\label{section4}
+
+The four filtering techniques presented in Section III are used to sense, filter, calibrate, and characterize the data through the methodology of the present section. 
+
+
+
+
+\begin{figure*}
+	\centering
+	\begin{subfigure}[b]{0.474\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{fig4a}
+		\caption{Experimentation arrangement of EyeLink 1000 tracker, OpenBCI device, and participant. }
+	\end{subfigure}
+	\begin{subfigure}[b]{0.52\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{fig4b}
+		\caption{Recording of EyeLink 1000 tracker signals and OpenBCI EOG signals simultaneously using lab streaming layer.}
+	\end{subfigure}
+\caption{Corneal-retinal potential is recorded by the electrodes placed on the outer canthus w.r.t. the electrode placed on the forehead. -22 to 22 \si{\deg} horizontal saccades are generated using the visual cues that are appeared on the LCD screen.}
+\label{fig4}
+\end{figure*}
+
+
+
+
+\subsection{Sensor Fusion}
+
+EOG dry electrodes are used to measure the corneal retinal potential of the eyeball. The physically measured signals are fused with the saccade models presented in Section \ref{section3}. The overall fusion algorithm is shown in Fig. \ref{fig3}. The proposed sensor fusion method has two parts: the physically and the mathematically modelled systems. Saccades are initiated with visual cues ($U_k$) and are measured between the time period $t=0-t_{end}$. The mathematical models given by Brownian, constant velocity, and constant acceleration models are used to calculate $E_{e\_k}$. In parallel, the raw EOG $E_k$ is measured using the electrooculography setup. Finally, both estimation and measurement signals are fused using a KF, to generate $\hat{E}_{e\_k}$.
+
+
+\subsection{Experimentation Setup}
+Tests were conducted on healthy individuals with no eye disorders. To minimise head movement that could interfere with measurements, participants were instructed to keep their heads as still as possible on a chin and forehead rest. Eye movements were measured using both an OpenBCI Cyton board and an EL, resulting in two parallel data streams. To capture EOG data, Skintact electrodes were attached to the participant on the outer canthus and forehead. Corneal-retinal potentials were measured with the forehead electrode as the reference. Meanwhile, the EL tracked the gaze position from the pupil center corneal reflection using infrared cameras. Due to the EL's superior reliability, EL data is later used for calibration and validation of EOG measurements.
+
+Audio and visual cues were presented using custom software created using the PsychoPy3 package. Visual cues were displayed on a 121.9 \si{\centi\metre} $\times$ 71.1 \si{\centi\metre} LCD monitor with a resolution of 1,920 $\times$ 1,080 pixels and a refresh rate of 30 \si{\hertz}. Meanwhile, audio cues were emitted from standard computer speakers. A keyboard placed in front of the participants allowed them to press a key to initiate the following trial. Event data (keyboard inputs), EOG and EL measurements were synchronised in real time to a shared computer clock using Lab Streaming Layer (LSL) software.
+
+\subsection{Saccade Study}
+
+The display centre was marked with a small circle, indicating the home fixation position of 0 degrees. Saccades were measured with respect to this home position. Four target locations were defined at the angles -22, -11, 11, 22 degrees and labelled A, B, C, D, respectively. A, B are to the left of the centre home position, while C, D are to the right. Only horizontal saccades were studied, so all points were aligned on a horizontal axis through the centre of the display.
+
+Each trial was initiated with a key pressing by the participant. Upon trial initiation, an auditory cue would name a point, directing the participant to generate a saccade towards the specified target location. A second auditory cue, presented as a ping, would signal the participant to return gaze toward the center home location, concluding the trial. Gaze locations were presented as a pseudorandom sequence.
+
+
+\subsection{Calibration}
+
+A calibration sequence, consisting of 5 consecutive trials for each of the four target locations A, B, C, D (in that order), preceded each testing session. Corneal-retinal potential was later converted into eyeball angle using linear parametric regression. Signal peak averages $E_{e\_peak}$ and peak counts $N_{pc}$ were used to generate calibration points $E_{peak\_average}$ as follows:
+
+\begin{equation}
+E_{(peak\_average)}(\theta)= \frac{1}{N_{pc}} \sum_{n=1}^{n=N_{pc}} [\min \max thresh (E[n])] 
+\end{equation}
+
+
+
+\subsection{Signal Quality and Analysis}
+
+To help evaluate the quality of filters, the signal to noise ratio (SNR) was monitored (Eq. \ref{eqSNR}), allowing the comparison of random/stochastic noise and unpredictable components in  filtered signals. 
+
+\begin{equation}
+\label{eqSNR}
+SNR_{dB} = 10 \log \bigg[  \frac{\sum_{n=1}^{N}(E[n])^2}{\sum_{n=1}^{N}(E[n]-E_R[n])^2}    \bigg]
+\end{equation}
+
+
+where, $E[n]$ : filtered EOG and $E_R [n]$ : raw EOG. 
+
+\subsection{Kalman Filter}
+\label{KFvalues}
+
+For Kalman filters, a higher $Q$ value (model noise) results in a greater gain and increased weight for the measurement, while a lower value results in greater accuracy but introduces a time lag. Hence, the selection of $Q$ value posed a trade-off between time response and accuracy \cite{ref21},\cite{ref22}. In the present work, the $Q$ values were selected using a trial and error approach. The $R$ values (sensor noise) were calculated from the mean of the standard deviations of the normalised errors from the calibration trial data.
+
+
+\subsection{Study Parameters}
+
+During data processing, trials were isolated using recorded event markers, corresponding to audio cues and keyboard inputs which marked the beginning and the end of each trial. Saccades were then isolated using the two change points found using MATLAB's findchangepts function, which identified abrupt changes in a signal. The peaks between the two change points were extracted using MATLAB's findpeaks function, then averaged to define saccade amplitude, equivalent to eyeball angular displacement for EOG $\theta_{EOG}$ and EL $\theta_{EL}$. Another calculated key feature was eye movement latency $t_{lat\_EOG}$ and $t_{lat\_EL}$, defined as the time duration between the audio cue marking trial initiation and the first change point. Numerical differentiation on the EOG and EL signals also yielded peak velocities $V_{EOG}$ and $V_{EL}$, defined as the maximum slope of the saccade response. Moreover, two definitions of error were considered. EOG error relative to EL is $E_{EOG - EL} = |\theta_{EOG} - \theta_{EL}|$, while absolute EOG or EL error is $E_{EOG/EL} = |\theta_{EOG/EL} - \theta|$, where $\theta$ is the physical angle in the experiment setup. Additionally. for each filter, signal to noise ratio (SNR) was calculated as previously described.
+
+
+\section{Data Set}
+
+Ethical approval for testing human participants was obtained from the University of British Columbia’s (UBC's) Behavioral Research Ethics Board (Approval No. H18-03792) under the project named “The effects of continuous eyelid closure on saccadic accuracy to remembered target locations.”  The experiments were carried out at the Vision Lab, UBC. All the participants of this activity were from the Human Subject Pool (HSP) of the department of Psychology. The reported data set excluded the data collected from any participants with known eye disorders or large optical corrections. Participants who used eyeglasses or contact lenses to correct their vision in daily life were asked to wear these lenses during the experiments. 
+
+
+
+\begin{figure*}
+	\centering
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{fig9a.eps}
+		\caption{Raw EOG signal and calibrated EL signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{fig9b.eps}
+		\caption{Trial with BP filter.}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{fig9c.eps}
+		\caption{Trial with BM filter.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{fig9d.eps}
+		\caption{Trial with CVM filter.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{fig9e.eps}
+		\caption{Trial with CAM filter.}
+	\end{subfigure}
+	\caption{Filter performance, shown as in an isolated saccade.The signal was measured from P023 during a randomly generated trial C.}
+	\label{fig9}
+\end{figure*}
+
+\begin{table*}[h]
+	\caption{The $Q$ and $R$ values used for different participants. The outliers (Out.\%) are selected  using the inter quartile range (IQR) }
+	\label{table2}
+	\begin{center}
+		
+		
+		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|} \hline
+			%	& \includegraphics[scale= 0.24]{tab1} 		& \includegraphics[scale= 0.17]{tab3} 		& \includegraphics[scale= 0.2]{tab2} 	& \includegraphics[scale= 0.17]{tab4}   \\ \hline
+			\textbf{P. No.}		&	\multicolumn{2}{|l|}{\textbf{\textbf{BP}}} &   \multicolumn{2}{|l|}{\textbf{BM}}       		&  \multicolumn{2}{|l|}{\textbf{\textbf{CVM}}}	& \multicolumn{2}{|l|}{\textbf{\textbf{CAM}}} & {\textbf{R}}	 \\ \hline
+			& { Out. \%} & \cellcolor{black} &  { Out.  \%} & {Q} &  { Out.  \%}  & {Q} & { Out.  \%} & {Q} & {} \\ \hline
+
+			P20	& 14.08  & 	\cellcolor{black} & 10.06 & 0.01  & 8.66  & 0.5  & 11.57 & 0.5   & 10.53\\ \hline	
+			P22	& 9.95   &  \cellcolor{black} & 7.52  & 0.01 & 8.76  &  0.5 & 7.19  &  0.5  & 15.56\\ \hline
+			P23	& 15.25  &  \cellcolor{black} & 15.16 & 0.01 & 15.70 &  0.5 & 16.19 &  0.5  & 8.06 \\ \hline
+			P24	& 6.31   & \cellcolor{black}  & 8.29  & 0.01 & 4.71  &  0.5  & 6.58  & 0.5  &  15.55\\ \hline
+			P25	& 14.13  & \cellcolor{black} & 17.88 & 0.01 & 17.49 & 0.5  & 13.59 & 0.5   &  16.64 \\ \hline
+			P26	& 21.24  &  \cellcolor{black} & 9.26  & 0.01 & 8.50  &  0.5 & 11.09 &  0.5  & 5.546 \\ \hline
+			P27	& 12.52  &  \cellcolor{black} & 11.54 & 0.01 & 9.84  &  0.5 & 9.15  &  0.5  & 150.4\\ \hline
+			P28	& 16.03  &  \cellcolor{black} & 14.15 & 0.01 & 14.49 &  0.5 & 14.51 &  0.5  &  10.14\\ \hline
+			P29	& 14.08  &  \cellcolor{black} & 11.37 & 0.01 & 15.72 &  0.5 & 14.42 &  0.5  & 21.71\\ \hline	
+			P32	& 17.10  & \cellcolor{black} & 19.24 & 0.01   & 19.20 & 0.5   & 17.43 & 0.5 & 22.85\\ \hline
+			P33	& 7.63   & \cellcolor{black} & 6.88  & 0.01 & 9.42	 & 0.5 & 10.49 & 0.5 & 173.31\\ \hline
+			
+			AVG	& 13.48  & \cellcolor{black} & 10.90	& \cellcolor{black} & 12.05 & \cellcolor{black} & 12.02	& \cellcolor{black}	& \cellcolor{black} \\  \hline
+		\end{tabular}
+	\end{center}
+	
+\end{table*}
+
+
+\begin{table}[h]
+	\caption{Calibration Factors ($\si{\milli\volt\deg^{-1}}$). BP, BM, CVM, and CAM denote the EOG signals. EL denotes the calibration factor for Eye Link 1000 for each participant. }
+	\label{tabl3}
+	\begin{center}
+		\begin{tabular}{|c|c|c|c|c|c|} \hline
+			%	& \includegraphics[scale= 0.24]{tab1} 		& \includegraphics[scale= 0.17]{tab3} 		& \includegraphics[scale= 0.2]{tab2} 	& \includegraphics[scale= 0.17]{tab4}   \\ \hline
+			
+			\textbf{P. No.}		&  \textbf{BP}		& \textbf{BM}	& 	\textbf{CVM}	& 	\textbf{CAM}  &  \textbf{EL}\\ \hline
+			P20		&  0.25		& 0.28	& 0.25    & 0.29	& 0.07 \\ \hline					
+			P22		&  0.21		& 0.23	& 0.18    & 0.20	& 0.08 \\ \hline
+			P23		&  0.48		& 0.40	& 0.47    & 0.52	& 0.07 \\ \hline		
+			P24		&  0.29		& 0.47	& 0.31    & 0.41	& 0.07 \\
+			\hline								
+			P25		&  0.12		& 0.08	& 0.09    & 0.09	& 0.08 \\ \hline
+			P26		&  0.15		& 0.14	& 0.36    & 0.49	& 0.07 \\ \hline			
+			P27		&  0.50		& 0.99	& 0.42    & 0.57	& 0.07 \\ \hline			
+			P28		&  0.23		& 0.24	& 0.27    & 0.30	& 0.07 \\ \hline			
+			P29		&  0.27		& 1.11	& 0.37    & 0.42	& 0.08 \\ \hline			
+			P32		&  0.20		& 0.19	& 0.24    & 0.26	& 0.07 \\ \hline						
+			P33		&  0.17		& 0.37	& 0.25    & 0.25	& 0.08 \\ \hline					
+		\end{tabular}
+	\end{center}
+	
+\end{table}
+
+\begin{table}[h]
+	\caption{Feature correlation between filtered EOG and EL.}
+	\label{tabl4}
+	\begin{center}
+		\begin{tabular}{|c|c|c|c|c|} \hline
+			%	& \includegraphics[scale= 0.24]{tab1} 		& \includegraphics[scale= 0.17]{tab3} 		& \includegraphics[scale= 0.2]{tab2} 	& \includegraphics[scale= 0.17]{tab4}   \\ \hline
+			\textbf{Feature}					&  \textbf{BP}			& \textbf{BM}	& 	\textbf{CVM} 	& 	\textbf{CAM}	 \\ \hline
+			Amplitude   &  0.991  & 0.999	& 0.999	& 0.999\\ \hline
+			Error    &  0.654  & 0.139	& 0.671	& 0.540\\ \hline
+			P. Velocity	&  0.976  & 0.935	& 0.967 & 0.157   \\ \hline
+			Latency		&  0.999  & 0.649	& 0.583	& 0.576\\ \hline		
+			\textbf{Mag. \% improv. w.r.t. BP}		&  \cellcolor{black}	&  0.8			& 	0.8	 			& 	0.8 \\ \hline		
+		\end{tabular}
+	\end{center}
+	
+\end{table}
+
+
+\begin{table}[h]
+	\caption{Errors ($\si{\deg}$) obtained after introducing different filtering approaches.}
+	\label{tabl5}
+	\begin{center}
+		\begin{tabular}{|c|c|c|c|c|} \hline
+			%	& \includegraphics[scale= 0.24]{tab1} 		& \includegraphics[scale= 0.17]{tab3} 		& \includegraphics[scale= 0.2]{tab2} 	& \includegraphics[scale= 0.17]{tab4}   \\ \hline
+			\textbf{Parameters}					&  \textbf{BP}		& \textbf{BM}	& 	\textbf{CVM} & \textbf{CAM}	 \\ \hline
+			$E_{abs\_EOG}$	&  6.80		& 5.49		& 	4.85	& 	4.93 \\ \hline
+			STD				&  1.04		& 0.95		& 	0.84	& 	0.85 \\ \hline
+			$E_{abs\_EL}$	&  2.85		& 2.85		& 	2.85	& 	2.85 \\ \hline
+			STD				&  0.42		& 0.42 	 	& 	0.42	& 	0.42 \\ \hline		
+			EOG \% improv. w.r.t. BP	
+			&  	\cellcolor{black}		&  19.3 	&  28.7 	 &  27.5\\ \hline
+			$E_{EOG-EL}$	&  7.57 	&  6.76 	& 	5.88	 & 	6.18 \\ \hline
+			STD				&  1.13		&  1.16		& 	0.93	 & 	0.97 \\ \hline		
+			\% improv. w.r.t. BP		
+			&  		\cellcolor{black}	&  10.7		& 22.3	 	 & 	18.4 \\ \hline		
+			
+			\hline
+		\end{tabular}
+	\end{center}
+	
+\end{table}
+
+\section{Results}
+\label{section5}
+
+The recorded EOG signals have shown a systematic trending with respect to time. The polynomial piece-wise de-trend function in MATLAB was used to remove these trends between each markers to bring isolated saccades in to the base value. Then, outliers were removed using interquartile range (1.5 x IQR from first and third quartiles) to obtain a non-biased data set. Table \ref{table2} summarizes the percentage of outliers removed after applying each filtering technique (13.48\% BP, 10.90\% BM, 12.05\% CVM, and 12.02\% CAM recordings were removed). Fig.\ref{fig9} shows an example of the part of recorded single that is extracted between the two markers of P023 Trail C. Fig.\ref{fig9} (a) shows the recorded raw signal (both EOG and EL) and (b) to (e) show the different filters. The visual inspection of this figure showed that CVM had restored the missing features (when comparing to Fig.\ref{fig9} (a) EL raw signal) of the signal to a certain extent, as quantified and presented in this section.  
+
+Tuning of the KF is paramount to the performance of each of these filters. The $R$ values were calculated based on each calibration trial and the $Q$ values were determined using a trial and error approach, as explained in Section \ref{KFvalues}. The $R$ and $Q$ values obtained for each trial are presented in the Table \ref{table2}. The $Q$ value is kept constant through out the study and the $R$ value varies based on different factors (e.g., noise) of the recorded signal. 
+
+Each session had two parts where participants had performed calibration trials and experimentation trials. Linear regression is applied on EOG data to calibrate the recordings from each session based on the calibration trials. The calibration factors obtained for each participant's session is presented in Table \ref{tabl3}. Both EOG and EL recordings were calibrated using the same process; however, the EL data was not filtered using these filtering techniques as it was used for comparison with the filtered EOG signals. 
+
+Since two devices were used in this study, the feature correlation of different features versus the filtering techniques were evaluated to verify the relation between each filter and the features between the two devices. Signal amplitude, error, peak velocity, and latency of EOG and EL were calculated for each filter, and presented in Table \ref{tabl4}. All of these techniques showed a good correlation, and the KF-based filter techniques showed an improved correlation of 0.8\%  in the amplitude (amplitude is considered the most important feature as it mainly affects the shape of the signal). 
+
+The application of these filters has were improved the amplitude, reduced the error, and kept the latency in the correct range. Fig.\ref{featuresfig} summarizes the results for these parameters for each filtering technique. To further quantify the filter performance, absolute error of EOG and EL ($E_{abs\_(EOG/EL)}$), and the error of EOG relative to EL ($E_{abs\_EOG -EL}$) were calculated, which are presented in Table \ref{tabl5}. When comparing with the EL signal, it is evident that CVM has not only been able to remove noise and artifacts, but also restored the saccadic eye movement signature. Few examples are explained and shown in Appendix (Section\ref{appA}). 
+
+\begin{figure*}
+	\centering
+	\begin{subfigure}[b]{0.49\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{Amp.eps}
+		\caption{Saccade amplitude for each filter technique.}
+		\label{fig5a}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.49\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{Acc.eps}
+		\caption{Saccade error for each filter technique.}
+		\label{fig5b}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.49\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pVel.eps}
+		\caption{Peak velocity for each filter technique.}
+		\label{fig5c}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.49\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{Lat.eps}
+		\caption{Saccade latency for each filter technique.}
+		\label{fig5d}
+	\end{subfigure}
+	\caption{Extracted saccade characteristics from EyeLink and filtered EOG signals, grouped by target locations A B C D.}
+	\label{featuresfig}
+\end{figure*}
+
+\section{Conclusion}
+\label{section6}
+
+EOG is a promising method for recording the eye movement and it is used in different areas to develop medical devices and applications. The noise and artifacts in these signals limit their use in the applications that would require a high accuracy. The state-of-the-art techniques such as BP filters and wavelet transform techniques have evidently caused over-filtering and are unable to restore features in the EOG signal. Therefore, a robust filter with adaptive features that match with saccade signatures is beneficial in improving the filtering capability. 
+
+The present paper introduced an intuitive model based on the constant velocity (i.e., the rate of change of the corneal-retinal potential is assumed constant ) and compared against the BP, BM, and CAM based approaches. Horizontal saccades were measured simultaneously with an OpenBCI board for EOG signal, and an EyeLink 1000 eye-tracker was used for validation due to its high temporal and spatial accuracy. A human study was carried out and saccade amplitude, error, latency, and peak velocity were studied against different filter techniques to identify the improvement of the newly introduced CVM method. CVM showed best performance, with the filtered data yielding the lowest errors ($E_{abs\_EOG} = 9.52 \si{\deg}, E_{EOG-EL} = 10.63 \si{\deg}$). All techniques were shown to be effective in noise reduction and artifact removal. The results showed that CVM has improved by about 29\% (in comparison to the physical size of the saccade) and over 22\% (in comparison to the EL recordings) with respect to the BP filter and about 2\% (in comparison to the physical size of the saccade) and over 21\% (in comparison to the EL recordings) with respect to the BP filter.
+
+
+Fig.\ref{featuresfig} summarizes the overall performance of all eleven human trials performed during the experimental study. According to Fig.\ref{featuresfig} (a) and Fig.\ref{featuresfig} (b), it is evident that small saccade amplitudes provide much high accuracy than with the larger amplitudes. Trial A and Trial B correspond to farthest locations (with highest saccade amplitude) from the center line (where the induced charge is zero). This may have reduced the accuracy of the recording by introducing a non linearity to the signal.  A similar phenomenon is evident in Fig.\ref{featuresfig} (b), Trial B and Trial C have less error than Trial A and Trial D.  Applying of these filters has not considerably affected to the latency of the signal as these filters would not affect the temporal resolution. Surprisingly, the use of any of these filters or models have not improved the velocity profile of the saccades. This may be mainly because of the use of numerical differentiation to generate the velocity profiles. 
+
+The new CVM based KF has used constant $Q$ and $R$ values based on the method presented in Section \ref{KFvalues}. These values were set at the beginning of each session and kept constant throughout the signal processing stage. This may have limited the performance of the algorithm. Therefore, it is believed that implementing a technique to calculate the $Q$ and $R$ values in real-time would improve the performance of the overall signal filtering process. Although, this human trials were performed with constant illumination conditions, real applications would be expose to varying illumination conditions. The future investigations may explore the filtering capability of this algorithm under varying illumination conditions.  
+
+
+\section*{Acknowledgment}
+
+This work is funded by the Natural Sciences and Engineering Research Council (NSERC) of Canada through the Strategic Partnership Grants project STPGP 493908 “Research in Sensory Information Technologies and Implementation in Sleep Disorder Monitoring.”
+
+
+\bibliographystyle{IEEEtran}
+% argument is your BibTeX string definitions and bibliography database(s)
+\bibliography{IEEEexample}
+
+
+\section{Appendix}
+\label{appA}
+
+\ref{fig10} shows several examples of distorted recordings and their improvement after applying the filtering techniques proposed in the present paper. The examples are extracted from the recordings of P023, P028, and P024 (see Fig.\ref{fig10}). Trial 5 of P023 is an example of a slightly noisy recording, which distorts the shape of the EOG signal. BP and three other model-based algorithms have responded differently against this noise, and it is seen that CVM had been able to greatly restore its shape in comparison to EL recording. Trial 19 of P028 is an example of a highly contaminated EOG signal distorted by an unknown artifact (possibly head movements). The signal is biased from the base line to a greater extent and could not represent a comparable recording with respect to EL. However, application of these different filters have responded differently while CVM had shown a cleaner signal with more peak values to estimate the saccade amplitude. Trial 35 and 18 of P024 are the examples of two saccades which made in opposite directions from the center point. These recordings have approximately a similar amount of noise and the CVM had shown better signal restoration and peak detection than other methods. 
+
+BF, CVM, and CAM have used the same KF algorithm but different modeling approaches.  Fig.\ref{fig10} (h),(o), and (t) are shown to be somewhat bit noisier than the others.One potential reason for this would be the use of a constant $Q$ value through out different sessions, but CVM has shown good stability throughout the sessions. Even though CAM has provided a good accuracy, it has not been able to restore the shape of the saccade in comparison to EL.   
+9
+
+
+\begin{sidewaysfigure*}
+	\centering
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A1a.eps}
+		\caption{P023 EL and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A1b.eps}
+		\caption{P023 BP and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A1c.eps}
+		\caption{P023 BM and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A1d.eps}
+		\caption{P023 CVM and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+	\includegraphics[width=\textwidth]{A1e.eps}
+	\caption{P023 CAM and Raw Signal.}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A2a.eps}
+		\caption{P028 EL and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A2b.eps}
+		\caption{P028 BP and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A2c.eps}
+		\caption{P028 BM and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A2d.eps}
+		\caption{P028 CVM and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+	\includegraphics[width=\textwidth]{A2e.eps}
+	\caption{P023 CAM and Raw Signal.}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A3a.eps}
+		\caption{P024 EL and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A3b.eps}
+		\caption{P024 BP and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A3c.eps}
+		\caption{P024 BM and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A3d.eps}
+		\caption{P024 CVM and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+	\includegraphics[width=\textwidth]{A3e.eps}
+	\caption{P023 CAM and Raw Signal.}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A4a.eps}
+		\caption{P024 EL and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A4b.eps}
+		\caption{P024 BP and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A4c.eps}
+		\caption{P024 BM and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+		\includegraphics[width=\textwidth]{A4d.eps}
+		\caption{P024 CVM and Raw Signal.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.18\textwidth}
+	\includegraphics[width=\textwidth]{A4e.eps}
+	\caption{P023 CAM and Raw Signal.}
+	\end{subfigure}
+	\hfill
+	\caption{Filter performance shown as in an isolated saccades.}
+	\label{fig10}
+\end{sidewaysfigure*}
+
+\end{document}
