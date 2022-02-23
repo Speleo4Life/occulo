@@ -157,7 +157,7 @@ if cond == 1 :
 
     trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, blockTargVert = load_cond1_config_file()
 
-    if not all(np.size(x) > 0 for x in [trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn]) :
+    if not all(np.size(x) > 0 for x in [trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, blockTargVert]) :
         print('')
         print("Config Error! Could not load or parse CSV file successfully. Exiting...")
         exit()
@@ -175,9 +175,9 @@ if cond == 1 :
 else : 
     print("\nPlease select the config file for Condition 2...")
 
-    trialTargetOrder, trialBlockNumber, blockNumbers, blockEyesOpen = load_cond2_config_file()
+    trialTargetOrder, trialBlockNumber, blockNumbers, blockEyesOpen, blockTargVert = load_cond2_config_file()
 
-    if not all(np.size(x) > 0 for x in [trialTargetOrder, trialBlockNumber, blockNumbers, blockEyesOpen]) :
+    if not all(np.size(x) > 0 for x in [trialTargetOrder, trialBlockNumber, blockNumbers, blockEyesOpen, blockTargVert]) :
         print('')
         print("Config Error! Could not load or parse CSV file successfully. Exiting...")
         exit()
@@ -188,9 +188,9 @@ else :
 
     numCalibTargets = 6
     numTrialsPerTarget_HorzCalib = 3
-    caliOrderHorz = [3,2,1,4,5,6, # 1,2,3,4,5,6
-                     3,2,1,4,5,6,
-                     3,2,1,4,5,6]
+    caliOrderHorz = [3,2,1,4,5,6] # 1,2,3,4,5,6
+                    # 3,2,1,4,5,6,
+                    # 3,2,1,4,5,6]
 # elif cond == 3:
 #     numTargets = 4
 #     numTrialsPerLetter = 12
@@ -287,29 +287,36 @@ print('')
 print('Initializing OpenBCI, perform EOG calibration in popup window.')
 print("Please wait for BCI Message...")
 print('')
+# try:
+#     openbci_process = subprocess.Popen(['python', 'C:/Users/Visionlab/Desktop/ClosedEyes/OpenBCI_LSL/openbci_lsl.py', '--channels', str(eog_channels)])
+#     time.sleep(20)
+#     eog_conn, eog_addr = socket_eog.accept()
+# except Exception as e:
+#     raise
+
+# print('')
+# print('BCIMSG: You may now start streaming in OpenBCI.')
+# print('')
+
+# while 1:
+#     opbci_msg = b"D"
+#     try:
+#         # opbci_msg = socket_eog_from.recv(2) # buffer size is 1 bytes (1 character + null)   
+#         opbci_msg = eog_conn.recv(2) # buffer size is 1 bytes (1 character + null)   
+#     except:
+#         pass
+
+#     if opbci_msg.startswith(b"s"):
+#         eog_conn.send(b"e") # turn off LSL streaming until first trial
+#         print('BCIMSG: Press ENTER to continue.')
+#         break
+
+eog_conn = None
 try:
-    openbci_process = subprocess.Popen(['python', 'C:/Users/Visionlab/Desktop/ClosedEyes/OpenBCI_LSL/openbci_lsl.py', '--channels', str(eog_channels)])
-    time.sleep(20)
-    eog_conn, eog_addr = socket_eog.accept()
+    myeog_process = subprocess.Popen(['python', 'EOG_circuit_testing/StreamSerialEOG.py'])
+    time.sleep(2)
 except Exception as e:
     raise
-
-print('')
-print('BCIMSG: You may now start streaming in OpenBCI.')
-print('')
-
-while 1:
-    opbci_msg = b"D"
-    try:
-        # opbci_msg = socket_eog_from.recv(2) # buffer size is 1 bytes (1 character + null)   
-        opbci_msg = eog_conn.recv(2) # buffer size is 1 bytes (1 character + null)   
-    except:
-        pass
-
-    if opbci_msg.startswith(b"s"):
-        eog_conn.send(b"e") # turn off LSL streaming until first trial
-        print('BCIMSG: Press ENTER to continue.')
-        break
 
 # This will ensure that the Command Prompt window will remain selected after the message is displayed
 # Makes the program less annoying to use.
@@ -469,14 +476,14 @@ if not exp_abort :
     if cond != 4 :
         elTk.sendMessage(["cond" + str(cond) + "_start"])
         if cond == 1:
-            ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_exp_msg, end_cond1_msg, trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, isi, TOFFSETX_SM,TOFFSETX_MD, TOFFSETX_LG, fix_shift, ev_outlet, eog_conn, el_outlet, elTk)           
+            ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_exp_msg, end_cond1_msg, trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, blockTargVert, isi, TOFFSETX_SM,TOFFSETX_MD, TOFFSETX_LG, fix_shift, ev_outlet, eog_conn, el_outlet, elTk)           
         elif cond == 2:
             ss_runtrials_cond2(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_exp_msg, end_cond1_msg, trialTargetOrder, trialBlockNumber, blockNumbers, blockEyesOpen, isi, TOFFSETX_SM,TOFFSETX_MD, TOFFSETX_LG, fix_shift, ev_outlet, eog_conn, el_outlet, elTk)
     else :
         if cond == 1:
-            ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_exp_msg, end_cond1_msg, trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, isi, TOFFSETX_SM,TOFFSETX_MD, TOFFSETX_LG, fix_shift, ev_outlet, eog_conn, el_outlet, elTk)           
+            ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_exp_msg, end_cond1_msg, trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, blockTargVert, isi, TOFFSETX_SM,TOFFSETX_MD, TOFFSETX_LG, fix_shift, ev_outlet, eog_conn, el_outlet, elTk)           
         elif cond == 2:
-            ss_runtrials_cond2(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_exp_msg, end_cond1_msg, trialTargetOrder, trialBlockNumber, blockNumbers, blockEyesOpen, isi, TOFFSETX_SM,TOFFSETX_MD, TOFFSETX_LG, fix_shift, ev_outlet, eog_conn, el_outlet, elTk)
+             ss_runtrials_cond2(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_exp_msg, end_cond1_msg, trialTargetOrder, trialBlockNumber, blockNumbers, blockEyesOpen, isi, TOFFSETX_SM,TOFFSETX_MD, TOFFSETX_LG, fix_shift, ev_outlet, eog_conn, el_outlet, elTk)
     
     ev_outlet.push_sample(["cond" + str(cond) + "_end"])
     if cond != 4 :

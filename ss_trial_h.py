@@ -71,44 +71,44 @@ def drawCentStimOnly(mywin, fixOuter, fixInner, fix_shift):
 def drawFixStimsHorz(mywin, fixOuter, fixInner, single_tgt_idx, TOFFSETX_SM,TOFFSETX_MD, TOFFSETX_LG, fix_shift) :
     drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,vert_shift_cm))
     if single_tgt_idx is None or single_tgt_idx < 0:
-        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_SM+fix_shift,vert_shift_cm))
-        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD+fix_shift,vert_shift_cm))
-        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_LG+fix_shift,vert_shift_cm))
         drawFixation(mywin, fixOuter, fixInner, position=(-1*TOFFSETX_SM+fix_shift,vert_shift_cm))
         drawFixation(mywin, fixOuter, fixInner, position=(-1*TOFFSETX_MD+fix_shift,vert_shift_cm))
         drawFixation(mywin, fixOuter, fixInner, position=(-1*TOFFSETX_LG+fix_shift,vert_shift_cm))
-    if single_tgt_idx == 0:
-        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_LG)+fix_shift,vert_shift_cm))
-    if single_tgt_idx == 1:
-        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD)+fix_shift,vert_shift_cm))
-    if single_tgt_idx == 2:
-        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_SM)+fix_shift,vert_shift_cm))
-    if single_tgt_idx == 3:
         drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_SM+fix_shift,vert_shift_cm))
-    if single_tgt_idx == 4:
         drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD+fix_shift,vert_shift_cm))
-    if single_tgt_idx == 5:
         drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_LG+fix_shift,vert_shift_cm))
+    if single_tgt_idx == 0:
+        drawFixation(mywin, fixOuter, fixInner, position=((TOFFSETX_LG)+fix_shift,vert_shift_cm))
+    if single_tgt_idx == 1:
+        drawFixation(mywin, fixOuter, fixInner, position=((TOFFSETX_MD)+fix_shift,vert_shift_cm))
+    if single_tgt_idx == 2:
+        drawFixation(mywin, fixOuter, fixInner, position=((TOFFSETX_SM)+fix_shift,vert_shift_cm))
+    if single_tgt_idx == 3:
+        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_SM)+fix_shift,vert_shift_cm))
+    if single_tgt_idx == 4:
+        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD)+fix_shift,vert_shift_cm))
+    if single_tgt_idx == 5:
+        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_LG)+fix_shift,vert_shift_cm))
 
 def drawFixStimsVert(mywin, fixOuter, fixInner, single_tgt_idx, TOFFSETX_SM, TOFFSETX_MD, fix_shift) :
     drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,vert_shift_cm))
     if single_tgt_idx is None or single_tgt_idx < 0:
-        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,TOFFSETX_SM+vert_shift_cm))
-        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,TOFFSETX_MD+vert_shift_cm))
         drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(-1*TOFFSETX_SM)+vert_shift_cm))
         drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(-1*TOFFSETX_MD)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(TOFFSETX_SM)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(TOFFSETX_MD)+vert_shift_cm))
     if single_tgt_idx == 0:
-        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD), (-1*TOFFSETX_MD)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(-1*TOFFSETX_SM)+vert_shift_cm))
     if single_tgt_idx == 1:
-        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift, (-1*TOFFSETX_MD)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(-1*TOFFSETX_MD)+vert_shift_cm))
     if single_tgt_idx == 2:
-        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD,(-1*TOFFSETX_MD)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(TOFFSETX_SM)+vert_shift_cm))
     if single_tgt_idx == 3:
-        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD), TOFFSETX_MD+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(TOFFSETX_MD)+vert_shift_cm))
     if single_tgt_idx == 4:
-        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,TOFFSETX_MD+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=((TOFFSETX_SM)+fix_shift,(-1*TOFFSETX_MD)+vert_shift_cm))
     if single_tgt_idx == 5:
-        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD,TOFFSETX_MD+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_SM)+fix_shift,(TOFFSETX_MD)+vert_shift_cm))
 
 
 def drawCalibStimsHorz(mywin, fixOuter, fixInner, single_tgt_idx, TOFFSETX_CAL_HORZ_1,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_3,TOFFSETX_CAL_HORZ_4,TOFFSETX_CAL_HORZ_5,TOFFSETX_CAL_HORZ_6, fix_shift) :
@@ -380,31 +380,6 @@ def ss_runcalibs(w, calDr, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg
         # stim_disp = True
         trialLetter = trialLetterOrder[tn]-1
         
-        ### FLASH 3 TIMES ###
-        # Embolden each letter for the first three times that it is displayed
-        # during the calibration period
-        # if emboldened_trials[trialLetter] < 1 :
-        #     emboldened_trials[trialLetter] += 1
-        #     if calDr=='H':
-        #         drawCalibLettersHorz(w, ltrQ, num1, num2, num3, num4, num5, num6, ltrZ, -1, TOFFSETX_CAL_HORZ_Q,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_S,TOFFSETX_CAL_HORZ_T,TOFFSETX_CAL_HORZ_W,TOFFSETX_CAL_HORZ_X,TOFFSETX_CAL_HORZ_Y,TOFFSETX_CAL_HORZ_Z, fix_shift)
-        #     else:
-        #         drawCalibLettersVert(w, num4, num5, num6, ltrZ, -1, TOFFSETX_SM, TOFFSETX_LG, fix_shift)
-        #     w.flip()
-        #     pylink.msecDelay(500)
-        #     blinks = 3
-        #     for _ in range(0,blinks) :
-        #         if calDr=='H':
-        #             drawCalibLettersHorz(w, ltrQ, num1, num2, num3, num4, num5, num6, ltrZ, trialLetter, TOFFSETX_CAL_HORZ_Q,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_S,TOFFSETX_CAL_HORZ_T,TOFFSETX_CAL_HORZ_W,TOFFSETX_CAL_HORZ_X,TOFFSETX_CAL_HORZ_Y,TOFFSETX_CAL_HORZ_Z, fix_shift)
-        #         else:
-        #             drawCalibLettersVert(w, num4, num5, num6, ltrZ, trialLetter, TOFFSETX_SM, TOFFSETX_LG, fix_shift)
-        #         w.flip()
-        #         pylink.msecDelay(500)
-        #         if calDr=='H':
-        #             drawCalibLettersHorz(w, ltrQ, num1, num2, num3, num4, num5, num6, ltrZ, -1, TOFFSETX_CAL_HORZ_Q,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_S,TOFFSETX_CAL_HORZ_T,TOFFSETX_CAL_HORZ_W,TOFFSETX_CAL_HORZ_X,TOFFSETX_CAL_HORZ_Y,TOFFSETX_CAL_HORZ_Z, fix_shift)
-        #         else:
-        #             drawCalibLettersVert(w, num4, num5, num6, ltrZ, -1, TOFFSETX_SM, TOFFSETX_LG, fix_shift)
-        #         w.flip()
-        #         pylink.msecDelay(500)
             
         ### Display stims
         if calDr=='H' :
@@ -464,7 +439,8 @@ def ss_runcalibs(w, calDr, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg
         ## Refresh PsychoPy event listener (for KB press)
         event.clearEvents()
 
-        udp_socket.send(b"b")
+        if udp_socket is not None :
+            udp_socket.send(b"b")
         # udp_socket.sendto("b", (UDP_IP, UDP_PORT))
         
         ev_outlet.push_sample(trial_st_msg)
@@ -672,7 +648,8 @@ def ss_runcalibs(w, calDr, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg
                         elTk.stopRecording()
                         elTk.sendMessage(trial_end_msg)
 
-                    udp_socket.send(b"e")
+                    if udp_socket is not None :
+                        udp_socket.send(b"e")
                     # udp_socket.sendto("e", (UDP_IP, UDP_PORT))
                     trial_end = True
                     break
@@ -745,7 +722,7 @@ def ss_runcalibs(w, calDr, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg
 
 
 
-def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, MkrDir, isi, TOFFSETX_SM,TOFFSETX_MD,TOFFSETX_LG, fix_shift, ev_outlet, udp_socket, el_outlet, elTk) :
+def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, blockTargVert, isi, TOFFSETX_SM,TOFFSETX_MD,TOFFSETX_LG, fix_shift, ev_outlet, udp_socket, el_outlet, elTk) :   # MkrDir was removed from the function
 
     ### Create visual stimuli
     fixOuter = visual.Circle(win=w, radius=0.50, units="cm", pos=(0,0), lineWidth=0.0, interpolate=True, fillColor=FG_COLOUR)
@@ -952,7 +929,7 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
                     break
             
             # # Drift correct 
-            if first_trial :
+            if first_trial or markers_on :
                 trial_drift_correct = False # !! to control TRIAL-BY-TRIAL drift correct change this
             else : 
                 trial_drift_correct = True # !! to control TRIAL-BY-TRIAL drift correct change this
@@ -982,6 +959,8 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
                             drift_resp = True
                             exp_abort = True
 
+                global post_calib_pause
+               
                 if recalibrate :
                     recalibrate = False
                     trial_drift_correct = False
@@ -1023,6 +1002,7 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
 
             # stim_disp = True
             trialTarget = block_trials[tn]-1
+            targDrawVert = blockTargVert[bn] 
             
             # Make messages for EDF and XDF
             iti_st_msg  = ["ITI_" + bMarkerStr + "_B" + '{0:02d}'.format(current_block) + "_T" + '{0:02d}'.format(tn+1) + "_START"]
@@ -1039,7 +1019,10 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
     
             ### Display stims
             if markers_on :
-                drawFixStimsHorz(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM, TOFFSETX_MD, TOFFSETX_LG, fix_shift)
+                if targDrawVert :
+                    drawFixStimsVert(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM, TOFFSETX_MD, fix_shift) 
+                else:
+                    drawFixStimsHorz(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM, TOFFSETX_MD, TOFFSETX_LG, fix_shift)
             else :
                 drawCentStimOnly(w, fixOuter, fixInner, fix_shift) 
             w.flip()
@@ -1048,7 +1031,10 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
                 # Wait for spacebar to begin, unless we just successfully drift corrected
                 if not trial_drift_correct and not skip_first_trial_check:
                     if not markers_on :
-                        drawFixStimsHorz(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM,TOFFSETX_MD,TOFFSETX_LG, fix_shift)
+                        if targDrawVert :
+                            drawFixStimsVert(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM, TOFFSETX_MD, fix_shift) 
+                        else:
+                            drawFixStimsHorz(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM,TOFFSETX_MD, TOFFSETX_LG, fix_shift)
                         w.flip()
                     trials_start = False
                     while not trials_start :
@@ -1064,7 +1050,10 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
                 first_trial = False
                 ### Display stims
                 if markers_on :
-                    drawFixStimsHorz(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM,TOFFSETX_MD,TOFFSETX_LG, fix_shift)
+                    if targDrawVert :
+                        drawFixStimsVert(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM, TOFFSETX_MD, fix_shift) 
+                    else:
+                        drawFixStimsHorz(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM,TOFFSETX_MD,TOFFSETX_LG, fix_shift)
                 else :
                     drawCentStimOnly(w, fixOuter, fixInner, fix_shift) 
                 w.flip()
@@ -1072,6 +1061,9 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
             else:
                 ## Refresh PsychoPy event listener (for KB press)
                 event.clearEvents()
+
+                
+                post_calib_pause = True
 
                 while post_calib_pause :
                     keys = event.getKeys()
@@ -1089,7 +1081,8 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
             ## Refresh PsychoPy event listener (for KB press)
             event.clearEvents()
 
-            udp_socket.send(b"b")
+            if udp_socket is not None :
+                udp_socket.send(b"b")
             # udp_socket.sendto("b", (UDP_IP, UDP_PORT))
     
             # Send trial start message
@@ -1228,13 +1221,19 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
                     if (now - warn_flash_start) < warn_flash_time :
                         ### Display red warning stims
                         if markers_on :
-                            drawFixStimsHorz(w, fixOuterWarning, fixInner, trialTarget, TOFFSETX_SM, TOFFSETX_MD, TOFFSETX_LG, fix_shift)
+                            if targDrawVert :
+                                drawFixStimsVert(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM, TOFFSETX_MD, fix_shift) 
+                            else:
+                                drawFixStimsHorz(w, fixOuterWarning, fixInner, trialTarget, TOFFSETX_SM, TOFFSETX_MD, TOFFSETX_LG, fix_shift)
                         else :
                             drawCentStimOnly(w, fixOuterWarning, fixInner, fix_shift) 
                     else :
                         ### Back to regular black stims
                         if markers_on :
-                            drawFixStimsHorz(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM, TOFFSETX_LG, TOFFSETX_MD, fix_shift)
+                            if targDrawVert :
+                                drawFixStimsVert(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM, TOFFSETX_MD, fix_shift) 
+                            else:
+                                drawFixStimsHorz(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM, TOFFSETX_LG, TOFFSETX_MD, fix_shift)
                         else :
                             drawCentStimOnly(w, fixOuter, fixInner, fix_shift) 
                     w.flip()
@@ -1272,7 +1271,10 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
                 continue # don't iterate trial number, so that we continue from same tn value
 
             if markers_on :
-                drawFixStimsHorz(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM,TOFFSETX_MD,TOFFSETX_LG, fix_shift)
+                if targDrawVert :
+                    drawFixStimsVert(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM, TOFFSETX_MD, fix_shift) 
+                else:
+                    drawFixStimsHorz(w, fixOuter, fixInner, trialTarget, TOFFSETX_SM, TOFFSETX_MD, TOFFSETX_LG, fix_shift)
             else :
                 drawCentStimOnly(w, fixOuter, fixInner, fix_shift)
             w.flip()
@@ -1316,7 +1318,8 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
                         if use_eyelink :
                             elTk.stopRecording()
                             elTk.sendMessage(trial_end_msg)
-                        udp_socket.send(b"e")
+                        if udp_socket is not None :
+                            udp_socket.send(b"e")
                         trial_end = True
                         break
                     
