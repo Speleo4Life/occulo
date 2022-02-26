@@ -35,6 +35,7 @@ SCREEN_WIDTH_CM = 120.65
 SCREEN_DIAG_CM = 138.68
 EYE_TO_SCREEN_CM = 50.00 # 96.5 (old setup)
 SM = 5.25
+SMMD = 7.75
 MD = 10.50
 LG = 21.00
 TOFFSETX_SM = (EYE_TO_SCREEN_CM * np.tan(np.deg2rad(SM)))
@@ -452,7 +453,7 @@ if run_calib_trials :
     ev_outlet.push_sample(["cal_horz_start"])
     if cond != 4 :
         elTk.sendMessage(["cal_horz_start"])
-    exp_abort = ss_runcalibs(w, "V", FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_cal_msg, end_cal_msg, caliOrderHorz, numCalibTargets, numTrialsPerTarget_HorzCalib, isi, TOFFSETX_CAL_HORZ_1,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_3,TOFFSETX_CAL_HORZ_4,TOFFSETX_CAL_HORZ_5,TOFFSETX_CAL_HORZ_6, fix_shift, TOFFSETX_SM, TOFFSETX_MD, ev_outlet, eog_conn, el_outlet, elTk)
+    exp_abort = ss_runcalibs(w, "H", FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_cal_msg, end_cal_msg, caliOrderHorz, numCalibTargets, numTrialsPerTarget_HorzCalib, isi, TOFFSETX_CAL_HORZ_1,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_3,TOFFSETX_CAL_HORZ_4,TOFFSETX_CAL_HORZ_5,TOFFSETX_CAL_HORZ_6, fix_shift, TOFFSETX_SM, TOFFSETX_MD, ev_outlet, eog_conn, el_outlet, elTk)
     ev_outlet.push_sample(["cal_horz_end"])
     if cond != 4 :
         elTk.sendMessage(["cal_horz_end"])       
@@ -619,9 +620,10 @@ if cond != 4 :
 # w.saveFrameIntervals(fileName=None, clear=True)
 
 # Terminate OpenBCI_LSL if needed
-if openbci_process.poll() is None :
-    openbci_process.kill()
+# if openbci_process.poll() is None :
+#     openbci_process.kill()
 eog_conn.close()
+
 
 if exp_abort or (run_cond2 is not False):
     try:

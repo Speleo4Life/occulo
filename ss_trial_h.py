@@ -11,6 +11,7 @@ UDP_IP = "127.0.0.1"
 UDP_PORT = 51000
 
 vert_shift_cm = -3.0
+VERT_MD = 2.625
 
 # comment to ensure update
 # Used to screen trial lists for no more than n consecutive targets
@@ -68,47 +69,58 @@ def drawCentStimOnly(mywin, fixOuter, fixInner, fix_shift):
     drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,vert_shift_cm))
 
 
-def drawFixStimsHorz(mywin, fixOuter, fixInner, single_tgt_idx, TOFFSETX_SM,TOFFSETX_MD, TOFFSETX_LG, fix_shift) :
+def drawFixStimsHorz(mywin, fixOuter, fixInner, single_tgt_idx, TOFFSETX_SM, TOFFSETX_MD, TOFFSETX_LG, fix_shift) :
     drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,vert_shift_cm))
     if single_tgt_idx is None or single_tgt_idx < 0:
         drawFixation(mywin, fixOuter, fixInner, position=(-1*TOFFSETX_SM+fix_shift,vert_shift_cm))
         drawFixation(mywin, fixOuter, fixInner, position=(-1*TOFFSETX_MD+fix_shift,vert_shift_cm))
-        drawFixation(mywin, fixOuter, fixInner, position=(-1*TOFFSETX_LG+fix_shift,vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(-1*TOFFSETX_LG+fix_shift,vert_shift_cm))        
         drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_SM+fix_shift,vert_shift_cm))
         drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD+fix_shift,vert_shift_cm))
         drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_LG+fix_shift,vert_shift_cm))
     if single_tgt_idx == 0:
-        drawFixation(mywin, fixOuter, fixInner, position=((TOFFSETX_LG)+fix_shift,vert_shift_cm))
-    if single_tgt_idx == 1:
-        drawFixation(mywin, fixOuter, fixInner, position=((TOFFSETX_MD)+fix_shift,vert_shift_cm))
-    if single_tgt_idx == 2:
-        drawFixation(mywin, fixOuter, fixInner, position=((TOFFSETX_SM)+fix_shift,vert_shift_cm))
-    if single_tgt_idx == 3:
-        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_SM)+fix_shift,vert_shift_cm))
-    if single_tgt_idx == 4:
-        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD)+fix_shift,vert_shift_cm))
-    if single_tgt_idx == 5:
         drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_LG)+fix_shift,vert_shift_cm))
+    if single_tgt_idx == 1:
+        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD)+fix_shift,vert_shift_cm))
+    if single_tgt_idx == 2:
+        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_SM)+fix_shift,vert_shift_cm))
+    if single_tgt_idx == 3:
+        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_SM+fix_shift,vert_shift_cm))
+    if single_tgt_idx == 4:
+        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD+fix_shift,vert_shift_cm))
+    if single_tgt_idx == 5:
+        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_LG+fix_shift,vert_shift_cm))
+
+
+# SM = 5.25
+# MD = 10.50
+# LG = 21.00
+# TOFFSETX_SM = (EYE_TO_SCREEN_CM * np.tan(np.deg2rad(SM)))
+# TOFFSETX_MD = (EYE_TO_SCREEN_CM * np.tan(np.deg2rad(MD)))
+# TOFFSETX_LG = (EYE_TO_SCREEN_CM * np.tan(np.deg2rad(LG)))
+
 
 def drawFixStimsVert(mywin, fixOuter, fixInner, single_tgt_idx, TOFFSETX_SM, TOFFSETX_MD, fix_shift) :
     drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,vert_shift_cm))
     if single_tgt_idx is None or single_tgt_idx < 0:
-        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(-1*TOFFSETX_SM)+vert_shift_cm))
-        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(-1*TOFFSETX_MD)+vert_shift_cm))
-        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(TOFFSETX_SM)+vert_shift_cm))
-        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(TOFFSETX_MD)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD), TOFFSETX_MD+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(TOFFSETX_SM+VERT_MD) + vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD,TOFFSETX_SM+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD), (-1*TOFFSETX_SM)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift, (-1*(TOFFSETX_SM+VERT_MD))+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD,(-1*TOFFSETX_MD)+vert_shift_cm))
     if single_tgt_idx == 0:
-        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(-1*TOFFSETX_SM)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD), TOFFSETX_MD+vert_shift_cm))
     if single_tgt_idx == 1:
-        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(-1*TOFFSETX_MD)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(TOFFSETX_SM+VERT_MD) + vert_shift_cm))
     if single_tgt_idx == 2:
-        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(TOFFSETX_SM)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD,TOFFSETX_SM+vert_shift_cm))
     if single_tgt_idx == 3:
-        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(TOFFSETX_MD)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD), (-1*TOFFSETX_SM)+vert_shift_cm))
     if single_tgt_idx == 4:
-        drawFixation(mywin, fixOuter, fixInner, position=((TOFFSETX_SM)+fix_shift,(-1*TOFFSETX_MD)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(fix_shift, (-1*(TOFFSETX_SM+VERT_MD))+vert_shift_cm))
     if single_tgt_idx == 5:
-        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_SM)+fix_shift,(TOFFSETX_MD)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD,(-1*TOFFSETX_MD)+vert_shift_cm))
 
 
 def drawCalibStimsHorz(mywin, fixOuter, fixInner, single_tgt_idx, TOFFSETX_CAL_HORZ_1,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_3,TOFFSETX_CAL_HORZ_4,TOFFSETX_CAL_HORZ_5,TOFFSETX_CAL_HORZ_6, fix_shift) :
@@ -149,12 +161,12 @@ def drawCalibLettersVert(mywin, num1, num2, num3, num4, num5, num6, emb_idx, TOF
     if emb_idx >= 0 and emb_idx <= 3 :
         is_emboldened[emb_idx] = True
     drawLetter(mywin, num1, position=((-1*TOFFSETX_MD),(TOFFSETX_MD)+vert_shift_cm), embolden=is_emboldened[0])
-    drawLetter(mywin, num2, position=(fix_shift,(TOFFSETX_MD)+vert_shift_cm), embolden=is_emboldened[1])
-    drawLetter(mywin, num3, position=(TOFFSETX_MD,(TOFFSETX_MD)+vert_shift_cm), embolden=is_emboldened[2])
-    drawLetter(mywin, num4, position=((-1*TOFFSETX_MD),(-1*TOFFSETX_MD)+vert_shift_cm), embolden=is_emboldened[3])
-    drawLetter(mywin, num5, position=(fix_shift,(-1*TOFFSETX_MD)+vert_shift_cm), embolden=is_emboldened[4])
-    drawLetter(mywin, num6, position=(TOFFSETX_MD,(-1*TOFFSETX_MD)+vert_shift_cm), embolden=is_emboldened[5])
-
+    drawLetter(mywin, num2, position=(fix_shift,(TOFFSETX_SM + VERT_MD)+vert_shift_cm), embolden=is_emboldened[1])
+    drawLetter(mywin, num3, position=(TOFFSETX_MD,(TOFFSETX_SM)+vert_shift_cm), embolden=is_emboldened[2])
+    drawLetter(mywin, num4, position=((-1*TOFFSETX_MD),(-1*TOFFSETX_SM)+vert_shift_cm), embolden=is_emboldened[3])
+    drawLetter(mywin, num5, position=(fix_shift,(-1*(TOFFSETX_SM + VERT_MD))+vert_shift_cm), embolden=is_emboldened[4])
+    drawLetter(mywin, num6, position=(TOFFSETX_MD,(-1*TOFFSETX_MD)+vert_shift_cm), embolden=is_emboldened[5])    
+ 
 
 def ss_runcalibs(w, calDr, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trialLetterOrder, numLetters, numTrialsPerLetter, isi, TOFFSETX_CAL_HORZ_1,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_3,TOFFSETX_CAL_HORZ_4,TOFFSETX_CAL_HORZ_5,TOFFSETX_CAL_HORZ_6, fix_shift,TOFFSETX_SM, TOFFSETX_MD, ev_outlet, udp_socket, el_outlet, elTk) :
 
@@ -285,6 +297,7 @@ def ss_runcalibs(w, calDr, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg
     # for tn in range(np.size(trialLetterOrder)) :
     tn = 0
     while tn < np.size(trialLetterOrder) :
+        print("Trial Index: " + str(tn) )
 
         ## Refresh PsychoPy event listener (for KB press)
         event.clearEvents()
@@ -379,6 +392,7 @@ def ss_runcalibs(w, calDr, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg
 
         # stim_disp = True
         trialLetter = trialLetterOrder[tn]-1
+        print("Trial Number: " + str(trialLetter+1))
         
             
         ### Display stims
@@ -505,6 +519,7 @@ def ss_runcalibs(w, calDr, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg
                 elTk.sendMessage(trial_stim_msg)
             # Play stimulus sound
             sounds[trialLetter].play()
+            print("Sound Playing: " + str(trialLetter))
             start_time = time.clock()
         else :
             start_time = 0
@@ -514,7 +529,7 @@ def ss_runcalibs(w, calDr, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg
 
         # Pause briefly to get fixation after letter is announced
         no_fix_post_target = True
-        posttarget_pause_time = 0.6
+        posttarget_pause_time = 0.3
         if not gaze_warning_activated :
             pause_start = time.clock()
             while no_fix_post_target :
@@ -559,7 +574,7 @@ def ss_runcalibs(w, calDr, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg
             warn_wait = True
             while warn_wait :
                 now = time.clock()
-                if (now - start_time) > 0.75 :
+                if (now - start_time) > .75 :
                     warn_wait = False
 
             # print("Gaze Warning!")
@@ -929,7 +944,7 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
                     break
             
             # # Drift correct 
-            if first_trial or markers_on :
+            if first_trial :
                 trial_drift_correct = False # !! to control TRIAL-BY-TRIAL drift correct change this
             else : 
                 trial_drift_correct = True # !! to control TRIAL-BY-TRIAL drift correct change this
@@ -959,7 +974,6 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
                             drift_resp = True
                             exp_abort = True
 
-                global post_calib_pause
                
                 if recalibrate :
                     recalibrate = False
@@ -1063,7 +1077,6 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
                 event.clearEvents()
 
                 
-                post_calib_pause = True
 
                 while post_calib_pause :
                     keys = event.getKeys()
