@@ -159,9 +159,9 @@ if cond == 1 :
 
     print("\nPlease select the config file for Condition 1...")
 
-    trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, blockTargVert = load_cond1_config_file()
+    trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, blockTargVert, calOrderID = load_cond1_config_file()
 
-    if not all(np.size(x) > 0 for x in [trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, blockTargVert]) :
+    if not all(np.size(x) > 0 for x in [trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, blockTargVert, calOrderID]) :
         print('')
         print("Config Error! Could not load or parse CSV file successfully. Exiting...")
         exit()
@@ -173,9 +173,8 @@ if cond == 1 :
     numCalibTargets = 6
     numTrialsPerTarget_HorzCalib = 1
     caliOrderHorz = [3,2,1,4,5,6]
-    # caliOrderHorz = [3,2,1,4,5,6, # T,R,S,Q,W,X,Y,Z
-    #                  3,2,1,4,5,6,
-    #                  3,2,1,4,5,6]
+
+
 else : 
     print("\nPlease select the config file for Condition 2...")
 
@@ -193,37 +192,7 @@ else :
     numCalibTargets = 3
     numTrialsPerTarget_HorzCalib = 1
     caliOrderHorz = [3,2,1,4,5,6] # 1,2,3,4,5,6
-                    # 3,2,1,4,5,6,
-                    # 3,2,1,4,5,6]
-# elif cond == 3:
-#     numTargets = 4
-#     numTrialsPerLetter = 12
-#     trialLetterOrder = np.repeat(np.arange(numTargets), numTrialsPerLetter)
-#     np.random.shuffle(trialLetterOrder)
 
-#     numMarkerTrials = 5
-#     d = np.floor_divide(numMarkerTrials,numTargets)
-#     r = np.remainder(numMarkerTrials,numTargets)
-#     practiceMarkerTrials = np.tile(np.arange(numTargets), d)
-#     r_ints = np.random.randint(0, high=numTargets, size=r)
-#     practiceMarkerTrials = np.concatenate((practiceMarkerTrials, r_ints))
-#     np.random.shuffle(practiceMarkerTrials)
-
-#     trialLetterOrder = np.concatenate((practiceMarkerTrials, trialLetterOrder))
-#     n_trials = np.size(trialLetterOrder,0)
-
-#     num_blocks = 1
-#     block_length = n_trials
-# else: # cond == 4
-#     numMarkerTrials = 0
-#     numTargets = 4
-#     numTrialsPerLetter = 12
-#     trialLetterOrder = np.repeat(np.arange(numTargets), numTrialsPerLetter)
-#     np.random.shuffle(trialLetterOrder)
-#     n_trials = np.size(trialLetterOrder,0)
-
-#     num_blocks = 1
-#     block_length = n_trials
 
 
 # Output demographics information to CSV
@@ -420,6 +389,9 @@ w.mouseVisible = False
 ### Create text messages
 st_cal_msg = createMessage(w, FG_COLOUR, 'Press any key to begin calibration.')
 end_cal_msg = createMessage(w, FG_COLOUR, 'End of Calibration.\nPress any key to continue to the experiment.')
+st_cal_msg = createMessage(w, FG_COLOUR, 'Press any key to begin calibration.')
+end_cal_msg = createMessage(w, FG_COLOUR, 'End of Calibration.\nPress any key to continue to the experiment.')
+
 
 st_exp_msg = createMessage(w, FG_COLOUR, 'Please wait for experimenter instructions.\nPress any key to continue.')
 end_cond1_msg = createMessage(w, FG_COLOUR, 'End of Condition.\nPress any key to continue.')
@@ -454,24 +426,44 @@ exp_abort = False
 if run_calib_trials :
     # Run calibration procedure for Eyelink & EOG linearization
     is_calib = True
-    ev_outlet.push_sample(["cal_horz_start"])
+    if calOrderID[0] == "H":
+        EV_MSG_CAL1 = "horz"
+        EV_MSG_CAL2 = "vert"
+        STR_CAL1 = "horizontal"
+        STR_CAL2 = "vertical" 
+    elif calOrderID[0] == "V":
+        EV_MSG_CAL1 = "vert"
+        EV_MSG_CAL2 = "horz"
+        STR_CAL1 = "vertical"
+        STR_CAL2 = "horizontal" 
+    
+    st_cal_msg1 = createMessage(w, FG_COLOUR, 'Press any key to begin ' + STR_CAL1 + ' EOG calibration.')
+    end_cal_msg1 = createMessage(w, FG_COLOUR, 'End of' + STR_CAL1 + ' EOG calibration. \nPress any key to begin experiment.')
+    
+    st_cal_msg2 = createMessage(w, FG_COLOUR, 'Press any key to begin ' + STR_CAL2 + ' EOG calibration.')
+    end_cal_msg2 = createMessage(w, FG_COLOUR, 'End of' + STR_CAL2 + ' EOG calibration. \nPress any key to begin experiment.')
+
+    ev_outlet.push_sample(["cal_" + EV_MSG_CAL1 + "_start"])
     if cond != 4 :
-        elTk.sendMessage(["cal_horz_start"])
-    exp_abort = ss_runcalibs(w, "H", FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_cal_msg, end_cal_msg, caliOrderHorz, numCalibTargets, numTrialsPerTarget_HorzCalib, isi, TOFFSETX_CAL_HORZ_1,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_3,TOFFSETX_CAL_HORZ_4,TOFFSETX_CAL_HORZ_5,TOFFSETX_CAL_HORZ_6, fix_shift, TOFFSETX_SM, TOFFSETX_MD, ev_outlet, eog_conn, el_outlet, elTk)
-    ev_outlet.push_sample(["cal_horz_end"])
+        elTk.sendMessage(["cal_" + EV_MSG_CAL1 + "_start"])
+    exp_abort = ss_runcalibs(w, calOrderID[0], FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_cal_msg1, end_cal_msg1, caliOrderHorz, numCalibTargets, numTrialsPerTarget_HorzCalib, isi, TOFFSETX_CAL_HORZ_1,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_3,TOFFSETX_CAL_HORZ_4,TOFFSETX_CAL_HORZ_5,TOFFSETX_CAL_HORZ_6, fix_shift, TOFFSETX_SM, TOFFSETX_MD, ev_outlet, eog_conn, el_outlet, elTk)
+    ev_outlet.push_sample(["cal_" + EV_MSG_CAL1 + "_end"])
     if cond != 4 :
-        elTk.sendMessage(["cal_horz_end"])       
+        elTk.sendMessage(["cal_" + EV_MSG_CAL1 + "_end"])       
+      
     if not exp_abort :
        print("On vertical test!") 
-       ev_outlet.push_sample(["cal_vert_start"])
+       ev_outlet.push_sample(["cal_" + EV_MSG_CAL2 + "_start"])
        if cond != 4 :
-           elTk.sendMessage(["cal_vert_start"])
-       exp_abort = ss_runcalibs(w, "V", FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_cal_msg, end_cal_msg, caliOrderHorz, numCalibTargets, numTrialsPerTarget_HorzCalib, isi, TOFFSETX_CAL_HORZ_1,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_3,TOFFSETX_CAL_HORZ_4,TOFFSETX_CAL_HORZ_5,TOFFSETX_CAL_HORZ_6, fix_shift,TOFFSETX_SM, TOFFSETX_MD, ev_outlet, eog_conn, el_outlet, elTk)
-       ev_outlet.push_sample(["cal_vert_end"])
+           elTk.sendMessage(["cal_" + EV_MSG_CAL2 + "_start"])
+       exp_abort = ss_runcalibs(w, calOrderID[1], FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_cal_msg2, end_cal_msg2, caliOrderHorz, numCalibTargets, numTrialsPerTarget_HorzCalib, isi, TOFFSETX_CAL_HORZ_1,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_3,TOFFSETX_CAL_HORZ_4,TOFFSETX_CAL_HORZ_5,TOFFSETX_CAL_HORZ_6, fix_shift,TOFFSETX_SM, TOFFSETX_MD, ev_outlet, eog_conn, el_outlet, elTk)
+       ev_outlet.push_sample(["cal_" + EV_MSG_CAL2 + "_end"])
        if cond != 4 :
-           elTk.sendMessage(["cal_vert_end"])
+           elTk.sendMessage(["cal_" + EV_MSG_CAL2 + "_end"])
 
 if not exp_abort :
+
+
     # Run trials
     ev_outlet.push_sample(["exp_start"])
     if cond != 4 :

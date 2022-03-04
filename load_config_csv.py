@@ -13,6 +13,7 @@ def load_cond1_config_file() :
     trialBlockNumber = np.array([], dtype=int)
     trialTargVert = np.array([], dtype=int)
     blockTargVert = np.array([], dtype=int)
+    calOrderID = np.array([], dtype=int)
 
     # Open system dialog to choose config file
     root = Tkinter.Tk()
@@ -34,11 +35,13 @@ def load_cond1_config_file() :
                     blockMarkersByTrial = np.append(blockMarkersByTrial, int(row["BlockMarkersOn"]))
                     trialBlockNumber = np.append(trialBlockNumber, int(row["BlockNum"]))
                     trialTargVert = np.append(trialTargVert, int(row["TargVert"]))
+                    calOrderID = np.append(calOrderID, int(row["CalOrdID"]))
                     line_count += 1
                 print('Got ' + os.path.basename(file_path) + ', processed ' + str(line_count-1) + ' trials total.')
                 
                 blockNumbers = np.unique(trialBlockNumber)
                 num_blocks = np.size(blockNumbers,0)
+
                 for bn in range(num_blocks):
                     current_block = blockNumbers[bn]
                     block_markers = blockMarkersByTrial[trialBlockNumber == current_block]
@@ -58,10 +61,19 @@ def load_cond1_config_file() :
                         blockTargVert = np.append(blockTargVert, 1)
                     elif np.all(block_markers == 2):
                         blockTargVert = np.append(blockTargVert, 2)
+
+                calOrderID = np.unique(calOrderID) 
+                
+
+                if calOrderID == 1:
+                    calOrderID = ["H", "V"]
+                else:
+                    calOrderID = ["V", "H"]
+
         except:
             print("error: could not load file!")
 
-    return trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, blockTargVert    
+    return trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, blockTargVert, calOrderID    
 
 
 

@@ -199,7 +199,7 @@ def ss_runcalibs(w, calDr, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg
         num5 = visual.TextStim(win=w, text='5', bold=True, units='cm', antialias=False, height=2.5, color=FG_COLOUR)
         num6 = visual.TextStim(win=w, text='6', bold=True, units='cm', antialias=False, height=2.5, color=FG_COLOUR)
         
-
+     
     if calDr=='H':
         trialNums = ['1','2','3','4','5','6']
     else:
@@ -408,14 +408,14 @@ def ss_runcalibs(w, calDr, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg
         event.clearEvents()
 
         # Make messages for EDF and XDF
-        iti_st_msg  = ["ITI_CALIB" + calDr + "_T" + '{0:02d}'.format(tn+1) + "_START"]
-        iti_end_msg = ["ITI_CALIB" + calDr + "_T" + '{0:02d}'.format(tn+1) + "_END"]
+        iti_st_msg  = ["ITI_CALIB" + calDr[0] + "_T" + '{0:02d}'.format(tn+1) + "_START"]
+        iti_end_msg = ["ITI_CALIB" + calDr[0] + "_T" + '{0:02d}'.format(tn+1) + "_END"]
 
-        trial_st_msg   = ["CALIB" + calDr + "_T" + '{0:02d}'.format(tn+1) + "_N" +  trialNums[trialLetter] + "_START"]
-        trial_stim_msg = ["CALIB" + calDr + "_T" + '{0:02d}'.format(tn+1) + "_N" +  trialNums[trialLetter] + "_STIM"]
-        trial_ping_msg = ["CALIB" + calDr + "_T" + '{0:02d}'.format(tn+1) + "_N" +  trialNums[trialLetter] + "_PING"]
-        trial_end_msg  = ["CALIB" + calDr + "_T" + '{0:02d}'.format(tn+1) + "_N" +  trialNums[trialLetter] + "_END"]
-        trial_warn_msg = ["CALIB" + calDr + "_T" + '{0:02d}'.format(tn+1) + "_N" +  trialNums[trialLetter] + "_WARN"]
+        trial_st_msg   = ["CALIB" + calDr[0] + "_T" + '{0:02d}'.format(tn+1) + "_N" +  trialNums[trialLetter] + "_START"]
+        trial_stim_msg = ["CALIB" + calDr[0] + "_T" + '{0:02d}'.format(tn+1) + "_N" +  trialNums[trialLetter] + "_STIM"]
+        trial_ping_msg = ["CALIB" + calDr[0] + "_T" + '{0:02d}'.format(tn+1) + "_N" +  trialNums[trialLetter] + "_PING"]
+        trial_end_msg  = ["CALIB" + calDr[0] + "_T" + '{0:02d}'.format(tn+1) + "_N" +  trialNums[trialLetter] + "_END"]
+        trial_warn_msg = ["CALIB" + calDr[0] + "_T" + '{0:02d}'.format(tn+1) + "_N" +  trialNums[trialLetter] + "_WARN"]
 
         if first_trial :
             # Wait for spacebar to begin, unless we just successfully drift corrected
