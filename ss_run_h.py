@@ -89,7 +89,7 @@ try:
     win32gui.SetForegroundWindow(handle)
 except:
     try: 
-        handle = win32gui.FindWindow(0, 'C:\\WINDOWS\\system32\\cmd.exe - python2  C:\\Users\\Visionlab\\Desktop\\tochy_working_version\\ss_run2.py')
+        handle = win32gui.FindWindow(0, 'C:\\WINDOWS\\system32\\cmd.exe - python2  C:\\Users\\Visionlab\\Desktop\\tochi_working_version\\ss_run_h.py')
         win32gui.SetForegroundWindow(handle)
     except:
         pass
@@ -97,7 +97,9 @@ except:
 # Get participant info
 print('')
 
-got_pname = False
+# got_pname = False
+got_pname = True
+pname = str(999)
 while not got_pname:
     pname = raw_input("Enter participant number: ")
     if len(pname) > 4:
@@ -108,7 +110,8 @@ while not got_pname:
 # ipd = raw_input("Enter participant's interpupilary distance (mm): ")
 ipd = 0
 fix_shift = 0 # float(ipd) / 20. # Divide by two and convert to centimeters
-cond = 0
+# cond = 0
+cond = 1
 # Get condition info, display reminders for proper screen/Eyelink setup
 print("""
 Please select the condition that you wish to run:
@@ -126,24 +129,24 @@ while cond == 0:
         print("Input Error! Enter a number corresponding to option 1 or 2")
 
 # Display condition-specific instructions for experimenter
-if cond == 1 :
-    markers_on = True
-    user_prac = raw_input("Run calibration trials? (y/n) ")
-    if user_prac.startswith('y') or user_prac.startswith('Y') :
-        run_calib_trials = True
-    else :
-        print("Skip calibration trials for Condition 1? Press ENTER to continue, ESC to quit.") 
-        while True :
-            if msvcrt.kbhit() :
-                if msvcrt.getch() == b'\x1b' :
-                    quit() 
-                else :
-                    run_calib_trials = False
-                    break
-else :
-    markers_on = False
-    run_calib_trials = False
-
+# if cond == 1 :
+#     markers_on = True
+#     user_prac = raw_input("Run calibration trials? (y/n) ")
+#     if user_prac.startswith('y') or user_prac.startswith('Y') :
+#         run_calib_trials = True
+#     else :
+#         print("Skip calibration trials for Condition 1? Press ENTER to continue, ESC to quit.") 
+#         while True :
+#             if msvcrt.kbhit() :
+#                 if msvcrt.getch() == b'\x1b' :
+#                     quit() 
+#                 else :
+#                     run_calib_trials = False
+#                     break
+# else :
+#     markers_on = False
+#     run_calib_trials = False
+run_calib_trials = True
 edfn = "P" + pname + "_C" + str(cond) + ".edf"
 edf_out_path = "C:\\Users\\Visionlab\\Desktop\\ClosedEyes\\Data\\EDF\\"
 
@@ -168,7 +171,7 @@ if cond == 1 :
     block_length = n_trials/num_blocks
 
     numCalibTargets = 6
-    numTrialsPerTarget_HorzCalib = 5
+    numTrialsPerTarget_HorzCalib = 1
     caliOrderHorz = [3,2,1,4,5,6]
     # caliOrderHorz = [3,2,1,4,5,6, # T,R,S,Q,W,X,Y,Z
     #                  3,2,1,4,5,6,
@@ -187,8 +190,8 @@ else :
     num_blocks = np.size(np.unique(trialBlockNumber), axis=0)
     block_length = n_trials/num_blocks
 
-    numCalibTargets = 6
-    numTrialsPerTarget_HorzCalib = 3
+    numCalibTargets = 3
+    numTrialsPerTarget_HorzCalib = 1
     caliOrderHorz = [3,2,1,4,5,6] # 1,2,3,4,5,6
                     # 3,2,1,4,5,6,
                     # 3,2,1,4,5,6]
@@ -252,8 +255,8 @@ with open(dems_out, 'ab') as csvfile :
 # eog_from_UDP_str = '['+str(UDP_IP)+','+str(UDP_PORT_FROM_EOG)+']'
 eog_UDP_str = '['+str(UDP_IP)+','+str(UDP_PORT_FROM_EOG)+']'
 lr_UDP_str = '['+str(UDP_IP)+','+str(UDP_PORT_FROM_LR)+']'
-# print('')
-# print("Opening UDP ports for EOG: send=" + eog_to_UDP_str + ", receive=" + eog_from_UDP_str)
+print('')
+print("Opening UDP ports for EOG: send=" + eog_UDP_str + ", receive=" + lr_UDP_str)
 # # Open UDP socket to send record on/off messages to OpenBCI_LSL
 # socket_eog_to = socket.socket(socket.AF_INET, # Internet
 #                               socket.SOCK_DGRAM) # UDP
@@ -265,6 +268,7 @@ socket_eog = socket.socket(socket.AF_INET, # Internet
 socket_eog.bind((UDP_IP, UDP_PORT_FROM_EOG))
 socket_eog.setblocking(0) # set to non-blocking port (for the while loop)
 socket_eog.listen(1)
+
 
 # # Open UDP socket to receive stream start message from OpenBCI_LSL
 # socket_eog_from = socket.socket(socket.AF_INET, # Internet
@@ -322,7 +326,7 @@ except Exception as e:
 # This will ensure that the Command Prompt window will remain selected after the message is displayed
 # Makes the program less annoying to use.
 try:
-    SetForegroundWindow(find_window(best_match='ss_run2.py'))
+    SetForegroundWindow(find_window(best_match='ss_run_h.py'))
 except:
     pass
 
@@ -602,8 +606,8 @@ if cond != 4 :
             edfTransfer.draw()
             w.flip()
             pylink.pumpDelay(500)
-        except:
-            pass
+        except Exception as e:
+            raise
          
     # Close the file and transfer it to Display PC
     elTk.closeDataFile()
@@ -622,7 +626,7 @@ if cond != 4 :
 # Terminate OpenBCI_LSL if needed
 # if openbci_process.poll() is None :
 #     openbci_process.kill()
-eog_conn.close()
+# eog_conn.close()
 
 
 if exp_abort or (run_cond2 is not False):

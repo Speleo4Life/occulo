@@ -103,14 +103,14 @@ def drawFixStimsHorz(mywin, fixOuter, fixInner, single_tgt_idx, TOFFSETX_SM, TOF
 def drawFixStimsVert(mywin, fixOuter, fixInner, single_tgt_idx, TOFFSETX_SM, TOFFSETX_MD, fix_shift) :
     drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,vert_shift_cm))
     if single_tgt_idx is None or single_tgt_idx < 0:
-        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD), TOFFSETX_MD+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD), TOFFSETX_SM+vert_shift_cm))
         drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(TOFFSETX_SM+VERT_MD) + vert_shift_cm))
         drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD,TOFFSETX_SM+vert_shift_cm))
         drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD), (-1*TOFFSETX_SM)+vert_shift_cm))
         drawFixation(mywin, fixOuter, fixInner, position=(fix_shift, (-1*(TOFFSETX_SM+VERT_MD))+vert_shift_cm))
-        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD,(-1*TOFFSETX_MD)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD,(-1*TOFFSETX_SM)+vert_shift_cm))
     if single_tgt_idx == 0:
-        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD), TOFFSETX_MD+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=((-1*TOFFSETX_MD), TOFFSETX_SM+vert_shift_cm))
     if single_tgt_idx == 1:
         drawFixation(mywin, fixOuter, fixInner, position=(fix_shift,(TOFFSETX_SM+VERT_MD) + vert_shift_cm))
     if single_tgt_idx == 2:
@@ -120,7 +120,7 @@ def drawFixStimsVert(mywin, fixOuter, fixInner, single_tgt_idx, TOFFSETX_SM, TOF
     if single_tgt_idx == 4:
         drawFixation(mywin, fixOuter, fixInner, position=(fix_shift, (-1*(TOFFSETX_SM+VERT_MD))+vert_shift_cm))
     if single_tgt_idx == 5:
-        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD,(-1*TOFFSETX_MD)+vert_shift_cm))
+        drawFixation(mywin, fixOuter, fixInner, position=(TOFFSETX_MD,(-1*TOFFSETX_SM)+vert_shift_cm))
 
 
 def drawCalibStimsHorz(mywin, fixOuter, fixInner, single_tgt_idx, TOFFSETX_CAL_HORZ_1,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_3,TOFFSETX_CAL_HORZ_4,TOFFSETX_CAL_HORZ_5,TOFFSETX_CAL_HORZ_6, fix_shift) :
@@ -160,12 +160,12 @@ def drawCalibLettersVert(mywin, num1, num2, num3, num4, num5, num6, emb_idx, TOF
     is_emboldened = [False,False,False,False, False, False]
     if emb_idx >= 0 and emb_idx <= 3 :
         is_emboldened[emb_idx] = True
-    drawLetter(mywin, num1, position=((-1*TOFFSETX_MD),(TOFFSETX_MD)+vert_shift_cm), embolden=is_emboldened[0])
+    drawLetter(mywin, num1, position=((-1*TOFFSETX_MD),(TOFFSETX_SM)+vert_shift_cm), embolden=is_emboldened[0])
     drawLetter(mywin, num2, position=(fix_shift,(TOFFSETX_SM + VERT_MD)+vert_shift_cm), embolden=is_emboldened[1])
     drawLetter(mywin, num3, position=(TOFFSETX_MD,(TOFFSETX_SM)+vert_shift_cm), embolden=is_emboldened[2])
     drawLetter(mywin, num4, position=((-1*TOFFSETX_MD),(-1*TOFFSETX_SM)+vert_shift_cm), embolden=is_emboldened[3])
     drawLetter(mywin, num5, position=(fix_shift,(-1*(TOFFSETX_SM + VERT_MD))+vert_shift_cm), embolden=is_emboldened[4])
-    drawLetter(mywin, num6, position=(TOFFSETX_MD,(-1*TOFFSETX_MD)+vert_shift_cm), embolden=is_emboldened[5])    
+    drawLetter(mywin, num6, position=(TOFFSETX_MD,(-1*TOFFSETX_SM)+vert_shift_cm), embolden=is_emboldened[5])    
  
 
 def ss_runcalibs(w, calDr, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trialLetterOrder, numLetters, numTrialsPerLetter, isi, TOFFSETX_CAL_HORZ_1,TOFFSETX_CAL_HORZ_2,TOFFSETX_CAL_HORZ_3,TOFFSETX_CAL_HORZ_4,TOFFSETX_CAL_HORZ_5,TOFFSETX_CAL_HORZ_6, fix_shift,TOFFSETX_SM, TOFFSETX_MD, ev_outlet, udp_socket, el_outlet, elTk) :
