@@ -784,7 +784,9 @@ def ss_runtrials(w, FG_COLOUR, BG_COLOUR, RED, GRN, PPCM, st_msg, end_msg, trial
  
     w.flip()
 
-    use_eyelink = el_outlet is not None 
+
+    use_eyelink = el_outlet is not None
+    
     if use_eyelink :
         el_calib_msg.draw()
         w.flip()

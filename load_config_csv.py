@@ -73,7 +73,7 @@ def load_cond1_config_file() :
         except:
             print("error: could not load file!")
 
-    return trialTargetOrder, trialBlockNumber, blockNumbers, blockMarkersOn, blockTargVert, calOrderID    
+    return trialTargetOrder, trialBlockNumber, trialTargVert, blockNumbers, blockMarkersOn, blockTargVert, calOrderID    
 
 
 
